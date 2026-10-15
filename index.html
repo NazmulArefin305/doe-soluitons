@@ -9,10 +9,8 @@
 aside{width:310px;background:#10222b;color:#dbe7ec;padding:20px 16px;position:sticky;top:0;height:100vh;overflow:auto;flex:none}
 aside h1{font-size:17px;margin:0 0 14px;color:#fff}aside label{font-size:12px;color:#8fb0bd}
 select,textarea,button{font:inherit}aside select{width:100%;padding:7px;margin:4px 0 14px;border-radius:6px;border:0}
-.pl button{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;color:#dbe7ec;padding:7px 10px;cursor:pointer}
-.pl button:hover{background:#1b3641}.pl button.on{border-left-color:var(--amb);background:#1b3641;color:#fff}.pl b{font-family:'IBM Plex Mono',monospace;margin-right:6px}
-main{flex:1;padding:26px 34px;max-width:980px}
-.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px}
+main{flex:1;min-width:0;width:100%;max-width:1100px;margin:0 auto;padding:clamp(14px,3vw,34px)}
+.card{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px}
 .card h2{margin:0 0 10px;font-size:17px}.card h2 span{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--teal);color:#fff;font-size:13px;margin-right:8px}
 .m{font-family:'IBM Plex Mono',monospace}.note{color:var(--mut);font-size:13px}
 .tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;color:#fff;background:var(--mut)}.ok{background:var(--ok)}.bad{background:var(--red)}
@@ -20,10 +18,11 @@ table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{padding:6px 9px
 .g{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 textarea{width:100%;height:110px;font-family:'IBM Plex Mono',monospace;font-size:12px}
 .dec{font-size:16px;padding:12px 14px;border-left:4px solid var(--red);background:#fdf1ef}.dec.n{border-color:var(--ok);background:#eef8f2}
-@media(max-width:800px){body{display:block}aside{width:auto;height:auto;position:static}main{padding:16px}.g,.g3{grid-template-columns:1fr}}
+@media(max-width:900px){body{display:block}aside{width:auto;height:auto;position:static;padding:14px}aside select{margin-bottom:8px}.g,.g3{grid-template-columns:1fr}}
+@media(max-width:480px){body{font-size:14px}.card{padding:14px}input[type=range]{width:100%!important}}
 </style></head><body>
 <aside><h1>Design &amp; Analysis of Experiments<br><span style="font-weight:400;font-size:13px">Textbook solutions</span></h1>
-<label>Chapter</label><select id="ch"></select><label>Problem</label><div class="pl" id="pl"></div></aside>
+<label>Chapter</label><select id="ch"></select><label>Problem</label><select id="pb"></select></aside>
 <main id="main"></main>
 <script>
 const $=id=>document.getElementById(id),qn=p=>jStat.normal.inv(p,0,1),mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
@@ -73,9 +72,8 @@ function regionPlot(id,type,stat,crit,d1,d2){const xs=[],ys=[];let lo,hi;
 /* ---------- app ---------- */
 let cur={id:'',groups:{},real:false};
 function init(){const s=$('ch');for(const c in CH)s.add(new Option(CH[c].name,c));s.onchange=list;list()}
-function list(){const c=CH[$('ch').value];$('pl').innerHTML=c.probs.map(p=>`<button data-id="${p[0]}"><b>${p[0]}</b>${p[1]}</button>`).join('');
- document.querySelectorAll('.pl button').forEach(b=>b.onclick=()=>pick(b.dataset.id,c));pick(c.probs.find(p=>DATA[p[0]])[0],c)}
-function pick(id,c){document.querySelectorAll('.pl button').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+function list(){const c=CH[$('ch').value],s=$('pb');s.innerHTML=c.probs.map(p=>`<option value="${p[0]}">${p[0]} — ${p[1]}</option>`).join('');s.onchange=()=>pick(s.value,c);pick(c.probs.find(p=>DATA[p[0]])[0],c)}
+function pick(id,c){$('pb').value=id;
  cur={id,title:c.probs.find(p=>p[0]===id)[1],groups:JSON.parse(JSON.stringify(DATA[id]||DEMO)),real:!!DATA[id]};cur.alpha=.05;shell();run()}
 function parseCSV(t){const g={};t.trim().split(/\n/).slice(1).forEach(r=>{const[a,b]=r.split(',');const v=parseFloat(b);if(a&&isFinite(v))(g[a.trim()]=g[a.trim()]||[]).push(v)});return g}
 function shell(){const csv='group,value\n'+Object.entries(cur.groups).flatMap(([k,a])=>a.map(v=>k+','+v)).join('\n');
