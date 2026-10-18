@@ -157,14 +157,10 @@ function run(){const g=cur.groups,names=Object.keys(g),k=names.length,arrs=names
  let h=`<div class="card"><h2><span>1</span>Hypotheses</h2><p class="m">H₀: ${H0}<br>H₁: ${H1}</p><p class="note">${k} groups, N = ${N} observations.</p></div>
  <div class="card"><h2><span>2</span>Sensitivity (significance level α)</h2><input type="range" id="al" min="0.01" max="0.10" step="0.01" value="${al}" style="width:260px"> <b class="m" id="alv">α = ${al.toFixed(2)}</b>
  <p class="note">Changing α recomputes every step below.</p></div>
- <div class="card"><h2><span>3</span>Normality and assumption checks</h2>
+ <div class="card"><h2><span>3</span>Data summary</h2>
  <table><tr><th>Group</th><th>n</th><th>Mean</th><th>SD</th></tr>${names.map((n,i)=>`<tr><td>${n}</td><td>${arrs[i].length}</td><td>${f4(mean(arrs[i]))}</td><td>${f4(Math.sqrt(vr(arrs[i])))}</td></tr>`).join('')}</table>
- <div class="g" style="margin-top:10px"><div id="p1"></div><div id="p2"></div></div>
- <p><b>Normality (Shapiro–Wilk on residuals):</b> ${S?`W = ${S.W.toFixed(4)}, p = ${fp(S.p)} <span class="tag ${normOK?'ok':'bad'}">${normOK?'normality not rejected':'normality rejected'}</span>`:'needs 4 to 2000 residuals'}<br>
- <b>Equal variances (Breusch–Pagan, studentized):</b> ${L?`LM = ${L.LM.toFixed(3)}, df = ${L.df}, p = ${fp(L.p)} <span class="tag ${varOK?'ok':'bad'}">${varOK?'variances similar':'variances differ'}</span>`:'not computable'}<br>
- <b>Independence (Durbin–Watson):</b> ${D?`d = ${D.d.toFixed(3)} (about 2 means no autocorrelation), p = ${fp(D.p)} <span class="tag ${indOK?'ok':'bad'}">${indOK?'no autocorrelation detected':'autocorrelation detected'}</span>`:'not computable'}</p>
- <p class="note">Durbin–Watson is only meaningful when the rows are listed in the order the runs were performed; check the data order before relying on it.</p>
- <div id="p3"></div></div>`;
+</div>`;
+ 
  let T,rec;
  if(k>2){rec=`One-way ANOVA (F test) — ${normOK&&varOK&&indOK?'assumptions look acceptable.':'at least one assumption is doubtful; treat the result with caution'+(normOK?'':' and consider Kruskal–Wallis')+(varOK?'':' or Welch ANOVA')+(indOK?'':'; residuals appear autocorrelated, so independence is in doubt')+'.'}`;T={type:'F',stat:anv.F,p:anv.p,d1:anv.d1,d2:anv.d2,crit:jStat.centralF.inv(1-al,anv.d1,anv.d2)}}
  else{const[a,b]=arrs,v1=vr(a)/a.length,v2=vr(b)/b.length;let t,df;
@@ -172,16 +168,23 @@ function run(){const g=cur.groups,names=Object.keys(g),k=names.length,arrs=names
   else{t=(mean(a)-mean(b))/Math.sqrt(v1+v2);df=(v1+v2)**2/(v1**2/(a.length-1)+v2**2/(b.length-1));rec='Welch two-sample t test (variances differ, σ unknown, so t rather than z).'}
   T={type:'t',stat:t,p:2*(1-jStat.studentt.cdf(Math.abs(t),df)),d1:df,crit:jStat.studentt.inv(1-al/2,df)}}
  const rej=T.p<al;
- h+=`<div class="card"><h2><span>4</span>Recommended test and results</h2><p><b>Recommendation:</b> ${rec}</p>
+ h+=`<div class="card"><h2><span>4</span>Recommended test and results</h2><p><b>Recommendation:</b> ${rec} <span class="note">The assumption checks are in step 6.</span></p>
  <div class="g3"><div>Statistic<br><b class="m">${T.type} = ${f4(T.stat)}</b></div><div>p-value<br><b class="m">${fp(T.p)}</b></div><div>Critical value<br><b class="m">${T.type==='t'?'±':''}${f4(T.crit)}</b></div></div>
  ${k>2?`<table style="margin-top:10px"><tr><th>Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th></tr><tr><td>Between</td><td>${f4(anv.ssb)}</td><td>${anv.d1}</td><td>${f4(anv.msb)}</td><td>${f4(anv.F)}</td><td>${fp(anv.p)}</td></tr><tr><td>Error</td><td>${f4(anv.ssw)}</td><td>${anv.d2}</td><td>${f4(anv.mse)}</td><td></td><td></td></tr></table>`:`<p class="note">df = ${T.d1.toFixed(2)}</p>`}
  <div id="p4"></div></div>
  <div class="card"><h2><span>5</span>Decision</h2><div class="dec ${rej?'':'n'}"><b>${rej?'Reject H₀':'Fail to reject H₀'}</b> at α = ${al.toFixed(2)} (p = ${fp(T.p)} ${rej?'<':'≥'} ${al.toFixed(2)}). ${rej?(k>2?'The group means are not all equal; post hoc comparisons follow.':'The two means differ.'):'There is not enough evidence that the means differ, so no post hoc analysis is needed.'}</div></div>`;
+ h+=`<div class="card"><h2><span>6</span>Assumption checks</h2>
+<div class="g"><div id="p1"></div><div id="p2"></div></div>
+ <p><b>Normality (Shapiro–Wilk on residuals):</b> ${S?`W = ${S.W.toFixed(4)}, p = ${fp(S.p)} <span class="tag ${normOK?'ok':'bad'}">${normOK?'normality not rejected':'normality rejected'}</span>`:'needs 4 to 2000 residuals'}<br>
+ <b>Equal variances (Breusch–Pagan, studentized):</b> ${L?`LM = ${L.LM.toFixed(3)}, df = ${L.df}, p = ${fp(L.p)} <span class="tag ${varOK?'ok':'bad'}">${varOK?'variances similar':'variances differ'}</span>`:'not computable'}<br>
+ <b>Independence (Durbin–Watson):</b> ${D?`d = ${D.d.toFixed(3)} (about 2 means no autocorrelation), p = ${fp(D.p)} <span class="tag ${indOK?'ok':'bad'}">${indOK?'no autocorrelation detected':'autocorrelation detected'}</span>`:'not computable'}</p>
+ <p class="note">Durbin–Watson is only meaningful when the rows are listed in the order the runs were performed; check the data order before relying on it.</p>
+ <div id="p3"></div></div>`;
  if(rej&&k>2){const qc=jStat.tukey.inv(1-al,k,anv.d2);let rows='';
   for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){const d=mean(arrs[i])-mean(arrs[j]),se=Math.sqrt(anv.mse/2*(1/arrs[i].length+1/arrs[j].length)),q=Math.abs(d)/se,p=Math.min(1,1-jStat.tukey.cdf(q,k,anv.d2)),hw=qc*se;
    rows+=`<tr><td>${names[i]} − ${names[j]}</td><td>${f4(d)}</td><td>${f4(d-hw)}</td><td>${f4(d+hw)}</td><td>${fp(p)}</td><td>${p<al?'<b style="color:#b42318">Different</b>':'—'}</td></tr>`}
-  h+=`<div class="card"><h2><span>6</span>Post hoc: Tukey HSD</h2><table><tr><th>Comparison</th><th>Diff</th><th>Lower</th><th>Upper</th><th>Adj. p</th><th>Result</th></tr>${rows}</table></div>`}
- else if(rej)h+=`<div class="card"><h2><span>6</span>Post hoc</h2><p>With two groups the t test already answers which means differ.</p></div>`;
+  h+=`<div class="card"><h2><span>7</span>Post hoc: Tukey HSD</h2><table><tr><th>Comparison</th><th>Diff</th><th>Lower</th><th>Upper</th><th>Adj. p</th><th>Result</th></tr>${rows}</table></div>`}
+ else if(rej)h+=`<div class="card"><h2><span>7</span>Post hoc</h2><p>With two groups the t test already answers which means differ.</p></div>`;
  o.innerHTML=h;
  $('al').oninput=e=>{cur.alpha=+e.target.value;run()};
  const fit=arrs.flatMap(a=>a.map(()=>mean(a)));draw('p1',[{x:fit,y:res,mode:'markers',marker:{color:'#147d92'}},{x:[Math.min(...fit),Math.max(...fit)],y:[0,0],mode:'lines',line:{color:'#d97706',dash:'dash'}}],lay('Residuals vs fitted','fitted value','residual'));
