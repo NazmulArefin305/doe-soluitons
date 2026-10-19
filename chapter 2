@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DOE Solutions</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{--ink:#17212b;--mut:#5b6773;--line:#d5dbe0;--bg:#f6f8f9;--teal:#147d92;--amb:#d97706;--red:#b42318;--ok:#157347}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--bg);display:flex;min-height:100vh}
+aside{width:310px;background:#10222b;color:#dbe7ec;padding:20px 16px;position:sticky;top:0;height:100vh;overflow:auto;flex:none}
+aside h1{font-size:17px;margin:0 0 14px;color:#fff}aside label{font-size:12px;color:#8fb0bd}
+select,textarea,button{font:inherit}aside select{width:100%;padding:7px;margin:4px 0 14px;border-radius:6px;border:0}
+main{flex:1;min-width:0;width:100%;max-width:1100px;margin:0 auto;padding:clamp(14px,3vw,34px)}
+.card{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px}
+.card h2{margin:0 0 10px;font-size:17px}.card h2 span{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--teal);color:#fff;font-size:13px;margin-right:8px}
+.m{font-family:'IBM Plex Mono',monospace}.note{color:var(--mut);font-size:13px}
+.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;color:#fff;background:var(--mut)}.ok{background:var(--ok)}.bad{background:var(--red)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+textarea{width:100%;height:110px;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.dec{font-size:16px;padding:12px 14px;border-left:4px solid var(--red);background:#fdf1ef}.dec.n{border-color:var(--ok);background:#eef8f2}
+@media(max-width:900px){body{display:block}aside{width:auto;height:auto;position:static;padding:14px}aside select{margin-bottom:8px}.g,.g3{grid-template-columns:1fr}}
+@media(max-width:480px){body{font-size:14px}.card{padding:14px}input[type=range]{width:100%!important}}
+</style></head><body>
+<aside><h1>Design &amp; Analysis of Experiments<br><a href="textbook%20solver.html" style="font-weight:400;font-size:13px;color:#8fd3e0">Textbook solutions →</a><br><a href="interactive%20solver.html" style="font-weight:400;font-size:13px;color:#8fd3e0">Chapter 3 solver →</a><br><a href="index.html" style="font-weight:400;font-size:13px;color:#8fd3e0">← Home</a></h1>
+<label>Chapter</label><select id="ch"></select><label>Problem</label><select id="pb"></select></aside>
+<main id="main"></main>
+<script>
+
+const $=id=>document.getElementById(id),qn=p=>jStat.normal.inv(p,0,1),mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const vr=a=>{const m=mean(a);return a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1)};
+const f4=x=>Math.abs(x)<1e-4&&x!==0?x.toExponential(2):x.toFixed(4),fp=p=>p<1e-4?'< 0.0001':p.toFixed(4);
+const med=a=>{const s=[...a].sort((x,y)=>x-y),h=s.length>>1;return s.length%2?s[h]:(s[h-1]+s[h])/2};
+/* ---------- statistics ---------- */
+function sw(x0){const n=x0.length;if(n<4||n>2000)return null;const x=[...x0].sort((a,b)=>a-b);
+ const m=x.map((_,i)=>qn((i+1-.375)/(n+.25))),ssm=m.reduce((s,v)=>s+v*v,0),u=1/Math.sqrt(n),sq=Math.sqrt(ssm);
+ const P=c=>c[0]*u**5+c[1]*u**4+c[2]*u**3+c[3]*u**2+c[4]*u,a=new Array(n).fill(0);
+ a[n-1]=P([-2.706056,4.434685,-2.07119,-.147981,.221157])+m[n-1]/sq;let phi;
+ if(n>5){a[n-2]=P([-3.582633,5.682633,-1.752461,-.293762,.042981])+m[n-2]/sq;
+  phi=(ssm-2*m[n-1]**2-2*m[n-2]**2)/(1-2*a[n-1]**2-2*a[n-2]**2);for(let i=2;i<n-2;i++)a[i]=m[i]/Math.sqrt(phi);a[0]=-a[n-1];a[1]=-a[n-2]}
+ else{phi=(ssm-2*m[n-1]**2)/(1-2*a[n-1]**2);for(let i=1;i<n-1;i++)a[i]=m[i]/Math.sqrt(phi);a[0]=-a[n-1]}
+ const mu=mean(x);let nu=0,de=0;x.forEach((v,i)=>{nu+=a[i]*v;de+=(v-mu)**2});if(de===0)return null;
+ const W=Math.min(nu*nu/de,.99999999),L=Math.log(n);let z;
+ if(n>=12){const y=Math.log(1-W);z=(y-(.0038915*L**3-.083751*L**2-.31082*L-1.5861))/Math.exp(.0030302*L**2-.082676*L-.4803)}
+ else{const y=-Math.log(-2.273+.459*n-Math.log(1-W));z=(y-(.544-.39978*n+.025054*n**2-.0006714*n**3))/Math.exp(1.3822-.77857*n+.062767*n**2-.0020322*n**3)}
+ return{W,p:1-jStat.normal.cdf(z,0,1)}}
+function anova(arrs){const k=arrs.length,N=arrs.reduce((s,a)=>s+a.length,0),gm=mean(arrs.flat());
+ const ssb=arrs.reduce((s,a)=>s+a.length*(mean(a)-gm)**2,0),ssw=arrs.reduce((s,a)=>s+(a.length-1)*vr(a),0);
+ const d1=k-1,d2=N-k,F=(ssb/d1)/(ssw/d2);return{ssb,ssw,d1,d2,msb:ssb/d1,mse:ssw/d2,F,p:1-jStat.centralF.cdf(F,d1,d2)}}
+function bp(arrs){const A=anova(arrs.map(a=>{const m=mean(a);return a.map(v=>(v-m)**2)})),sst=A.ssb+A.ssw,N=arrs.flat().length;if(!(sst>0))return null;
+ const LM=N*A.ssb/sst,df=arrs.length-1;return{LM,df,p:1-jStat.chisquare.cdf(LM,df)}}
+function dw(e,arrs){const n=e.length,gi=[],ng=[],df=n-arrs.length;arrs.forEach((a,i)=>{ng[i]=a.length;a.forEach(()=>gi.push(i))});if(df<2)return null;
+ let num=0,den=0;for(let t=0;t<n;t++){den+=e[t]**2;if(t)num+=(e[t]-e[t-1])**2}if(!den)return null;
+ const M=(i,j)=>(i===j?1:0)-(gi[i]===gi[j]?1/ng[gi[i]]:0),Aa=(i,j)=>i===j?(i===0||i===n-1?1:2):Math.abs(i-j)===1?-1:0,B=[];
+ for(let i=0;i<n;i++){B[i]=[];for(let j=0;j<n;j++){let s=0;for(let q=Math.max(0,j-1);q<=Math.min(n-1,j+1);q++)s+=M(i,q)*Aa(q,j);B[i][j]=s}}
+ let t1=0,t2=0;for(let i=0;i<n;i++){t1+=B[i][i];for(let j=0;j<n;j++)t2+=B[i][j]*B[j][i]}
+ const Ed=t1/df,V=2*(t2-t1*Ed)/(df*(df+2));if(!(V>0))return null;const d=num/den,c=jStat.normal.cdf((d-Ed)/Math.sqrt(V),0,1);return{d,p:2*Math.min(c,1-c)}}
+const lay=(t,x,y)=>({title:{text:t,font:{size:13}},xaxis:{title:x},yaxis:{title:y},margin:{l:50,r:10,t:34,b:42},height:260,paper_bgcolor:'rgba(0,0,0,0)',font:{family:'IBM Plex Sans'},showlegend:false});
+const draw=(id,tr,l)=>Plotly.newPlot(id,tr,l,{displayModeBar:false,responsive:true});
+
+const DS={"mortar": {"title": "Portland cement", "ref": "Section 2.1 · Table 2.1", "design": "independent", "response": "Tension bond strength (kgf/cm²)", "desc": "Tension bond strengths for polymer-modified and unmodified mortar. The two measurements come from separate mortar formulations.", "question": null, "groups": {"Modified mortar": [16.85, 16.4, 17.21, 16.35, 16.52, 17.04, 16.96, 17.15, 16.59, 16.57], "Unmodified mortar": [16.62, 16.75, 17.37, 17.12, 16.98, 16.87, 17.34, 17.02, 17.08, 17.27]}}, "fluorescence": {"title": "Fluorescence in mouse tissue", "ref": "Example 2.1 · Table 2.3", "design": "paired", "response": "Normalized fluorescence (unit not stated)", "desc": "Nerve and muscle fluorescence measured in the same 12 mice; the observations are matched by mouse.", "question": null, "groups": {"Nerve": [6625.0, 6000.0, 5450.0, 5200.0, 5175.0, 4900.0, 4750.0, 4500.0, 3985.0, 900.0, 450.0, 2800.0], "Muscle": [3900.0, 3500.0, 3450.0, 3200.0, 2980.0, 2800.0, 2500.0, 2400.0, 2200.0, 1200.0, 1150.0, 1130.0]}}, "hardness": {"title": "Hardness testing", "ref": "Section 2.5.1 · Table 2.6", "design": "paired", "response": "Coded hardness", "desc": "Two testing tips measure the same 10 metal specimens, so each specimen supplies a matched pair.", "question": null, "groups": {"Tip 1": [7.0, 3.0, 3.0, 4.0, 8.0, 3.0, 2.0, 9.0, 5.0, 4.0], "Tip 2": [6.0, 3.0, 5.0, 3.0, 8.0, 2.0, 4.0, 9.0, 4.0, 5.0]}}, "beverage": {"title": "Beverage shelf life", "ref": "Exercise 2.22", "design": "one", "response": "Shelf life (days)", "desc": "Ten randomly selected carbonated beverage bottles. The question is whether mean shelf life exceeds 120 days.", "question": "Does the mean shelf life exceed 120 days?", "groups": {"Bottles": [108.0, 124.0, 124.0, 106.0, 115.0, 138.0, 163.0, 159.0, 134.0, 139.0]}, "mu": 120.0, "alt": "greater"}, "repair": {"title": "Electronic instrument repair time", "ref": "Exercise 2.24", "design": "one", "response": "Repair time (hours)", "desc": "Repair times for 16 randomly selected electronic instruments.", "question": "Is the population mean repair time different from 240 hours? (The reference value is editable.)", "groups": {"Instruments": [159.0, 101.0, 224.0, 179.0, 222.0, 168.0, 149.0, 485.0, 280.0, 212.0, 379.0, 264.0, 362.0, 250.0, 260.0, 170.0]}, "mu": 240.0, "alt": "two.sided"}, "fill": {"title": "Bottle fill volume", "ref": "Exercise 2.26", "design": "independent", "response": "Fill volume (ounces)", "desc": "Two filling machines each have 10 observed bottle volumes; 16.0 oz is the nominal target.", "question": null, "groups": {"Machine 1": [16.03, 16.04, 16.05, 16.05, 16.02, 16.01, 15.96, 15.98, 16.02, 15.99], "Machine 2": [16.02, 15.97, 15.96, 16.01, 15.99, 16.03, 16.04, 16.02, 16.01, 16.0]}}, "flare": {"title": "Chemical flare burning time", "ref": "Exercise 2.28", "design": "independent", "response": "Burning time (minutes)", "desc": "Burning-time samples for two chemical flare formulations, 10 flares per type.", "question": null, "groups": {"Type 1": [65.0, 81.0, 57.0, 66.0, 82.0, 82.0, 67.0, 59.0, 75.0, 70.0], "Type 2": [64.0, 71.0, 83.0, 59.0, 65.0, 56.0, 69.0, 74.0, 82.0, 79.0]}}, "plasma": {"title": "Plasma etch uniformity", "ref": "Exercise 2.29", "design": "independent", "response": "Etch uniformity (unit not stated)", "desc": "Uniformity measurements at two C2F6 gas flow rates, six observations at each rate.", "question": null, "groups": {"125 SCCM": [2.7, 4.6, 2.6, 3.0, 3.2, 3.8], "200 SCCM": [4.6, 3.4, 2.9, 3.5, 4.1, 5.1]}}, "photoresist": {"title": "Photoresist thickness", "ref": "Exercise 2.31", "design": "independent", "response": "Thickness (kA, as reported)", "desc": "Thickness measurements from wafers baked at 95°C or 100°C; eight observations per temperature.", "question": null, "groups": {"95°C": [11.176, 7.089, 8.097, 11.739, 11.291, 10.759, 6.467, 8.315], "100°C": [5.263, 6.748, 7.461, 7.015, 8.133, 7.418, 3.772, 8.963]}}, "appearance": {"title": "Cell-phone housing appearance", "ref": "Exercise 2.32", "design": "independent", "response": "Appearance score (1 defective to 10 perfect)", "desc": "Appearance scores for housings cooled for 10 or 20 seconds; 20 housings per group.", "question": null, "groups": {"10 seconds": [1.0, 2.0, 1.0, 3.0, 5.0, 1.0, 5.0, 2.0, 3.0, 5.0, 3.0, 6.0, 5.0, 3.0, 2.0, 1.0, 6.0, 8.0, 2.0, 3.0], "20 seconds": [7.0, 8.0, 5.0, 9.0, 5.0, 8.0, 6.0, 4.0, 6.0, 7.0, 6.0, 9.0, 5.0, 7.0, 4.0, 6.0, 8.0, 5.0, 8.0, 7.0]}}, "qualification": {"title": "Plasma-etcher qualification", "ref": "Exercise 2.33", "design": "one", "response": "Etch uniformity (unit not stated)", "desc": "Twenty etch-uniformity measurements collected during qualification of a plasma etcher.", "question": "Is mean etch uniformity different from the editable 6-unit reference?", "groups": {"Wafers": [5.34, 6.0, 5.97, 5.25, 6.65, 7.55, 7.35, 6.35, 4.76, 5.54, 5.44, 4.61, 5.98, 5.62, 4.39, 6.0, 7.25, 6.21, 4.98, 5.32]}, "mu": 6.0, "alt": "two.sided"}, "calipers": {"title": "Ball-bearing caliper measurements", "ref": "Exercise 2.34", "design": "paired", "response": "Ball-bearing diameter (unit not stated)", "desc": "Twelve inspectors each measure the same ball bearing with both calipers; measurements are matched by inspector.", "question": null, "groups": {"Caliper 1": [0.265, 0.265, 0.266, 0.267, 0.267, 0.265, 0.267, 0.267, 0.265, 0.268, 0.268, 0.265], "Caliper 2": [0.264, 0.265, 0.264, 0.266, 0.267, 0.268, 0.264, 0.265, 0.265, 0.267, 0.268, 0.269]}}, "twins": {"title": "Twin intelligence scores", "ref": "Exercise 2.35", "design": "paired", "response": "Intelligence score", "desc": "Scores from 10 monozygotic twin pairs, matched by pair and organized by birth order.", "question": null, "groups": {"Birth order 1": [6.08, 6.22, 7.99, 7.44, 6.48, 7.99, 6.32, 7.6, 6.03, 7.52], "Birth order 2": [5.73, 5.8, 8.42, 6.84, 6.43, 8.76, 6.32, 7.62, 6.59, 7.67]}}, "girders": {"title": "Steel-girder prediction methods", "ref": "Exercise 2.36", "design": "paired", "response": "Predicted / observed load ratio", "desc": "Two prediction methods are evaluated on the same nine girders. The repeated S2/1 identifier is preserved as printed.", "question": null, "groups": {"Karlsruhe": [1.186, 1.151, 1.322, 1.339, 1.2, 1.402, 1.365, 1.537, 1.559], "Lehigh": [1.061, 0.992, 1.063, 1.062, 1.065, 1.178, 1.037, 1.086, 1.052]}}, "abs": {"title": "ABS plastic deflection temperature", "ref": "Exercise 2.37", "design": "independent", "response": "Deflection temperature (°F)", "desc": "Deflection temperatures under load for two ABS pipe formulations, 12 observations per formulation.", "question": null, "groups": {"Formulation 1": [206.0, 188.0, 205.0, 187.0, 193.0, 207.0, 185.0, 189.0, 192.0, 210.0, 194.0, 178.0], "Formulation 2": [177.0, 197.0, 206.0, 201.0, 176.0, 185.0, 200.0, 197.0, 198.0, 188.0, 189.0, 203.0]}}, "etch": {"title": "Wet chemical etch rate", "ref": "Exercise 2.39", "design": "independent", "response": "Etch rate (mils/min)", "desc": "Etch rates for two wet chemical solutions, eight randomly selected wafers per solution.", "question": null, "groups": {"Solution 1": [9.9, 9.4, 10.0, 10.3, 10.6, 10.3, 9.3, 9.8], "Solution 2": [10.2, 10.0, 10.7, 10.5, 10.6, 10.2, 10.4, 10.3]}}};
+const DL={one:'One sample',independent:'Two independent samples',paired:'Paired samples'},AS={'two.sided':'≠',greater:'>',less:'<'};
+const TESTS=[['recommended','Recommended for this data'],['one_t','One-sample t-test'],['one_z','One-sample z-test (known σ)'],['welch','Welch two-sample t-test'],['pooled','Pooled two-sample t-test'],['paired_t','Paired t-test'],['wilcox','Wilcoxon signed-rank'],['mw','Mann–Whitney U (rank-sum)']];
+const sd=a=>Math.sqrt(vr(a));let cur={};
+function init(){$('ch').add(new Option('Chapter 2 · Simple comparative experiments','2'));const p=$('pb');
+ for(const k of ['one','independent','paired']){const g=document.createElement('optgroup');g.label=DL[k];for(const id in DS)if(DS[id].design===k)g.appendChild(new Option(DS[id].ref+' — '+DS[id].title,id));p.appendChild(g)}
+ p.onchange=()=>pick(p.value);pick('mortar')}
+function pick(id){const d=DS[id];$('pb').value=id;cur={id,d,groups:JSON.parse(JSON.stringify(d.groups)),alpha:.05,alt:d.alt||'two.sided',mu:d.mu!==undefined?d.mu:mean(Object.values(d.groups)[0]),sg:'',test:'recommended'};shell();run()}
+function parseCSV(t){const g={};t.trim().split(/\n/).slice(1).forEach(r=>{const[a,b]=r.split(',');const v=parseFloat(b);if(a&&isFinite(v))(g[a.trim()]=g[a.trim()]||[]).push(v)});return g}
+function shell(){const d=cur.d,csv='group,value\n'+Object.entries(cur.groups).flatMap(([k,a])=>a.map(v=>k+','+v)).join('\n');
+ $('main').innerHTML=`<div class="card"><h2 style="font-size:20px">${d.ref} — ${d.title}</h2><p class="note">${DL[d.design]} · ${d.response}</p><p>${d.desc}</p>${d.question?`<p><b>Question:</b> ${d.question}</p>`:''}
+ <details><summary>Data (editable CSV: group,value; row order = run order)</summary><textarea id="csv">${csv}</textarea><br><button id="ap">Apply data</button></details></div><div id="out"></div>`;
+ $('ap').onclick=()=>{cur.groups=parseCSV($('csv').value);run()}}
+function ranks(v){const ix=v.map((x,i)=>[x,i]).sort((a,b)=>a[0]-b[0]),r=[],t=[];let i=0;while(i<ix.length){let j=i;while(j+1<ix.length&&ix[j+1][0]===ix[i][0])j++;for(let q=i;q<=j;q++)r[ix[q][1]]=(i+j)/2+1;t.push(j-i+1);i=j+1}return{r,t}}
+function runTest(k,c){const{arrs,x1,alt,al,mu,sg,des}=c,q=(p,dist,df)=>dist==='z'?qn(p):jStat.studentt.inv(p,df);
+ const avail={one:['one_t','one_z','wilcox'],paired:['paired_t','wilcox'],independent:['welch','pooled','mw']}[des];
+ if(!avail.includes(k))return{err:'This test is not possible for this data: it does not fit a '+DL[des].toLowerCase()+' design.'};
+ if(k==='one_z'&&!(sg>0))return{err:'The z-test needs a known population SD. Enter σ in step 1.'};
+ const fin=(name,est,se,df,m0,dist)=>{const stat=(est-m0)/se,cdf=x=>dist==='z'?jStat.normal.cdf(x,0,1):jStat.studentt.cdf(x,df),p=alt==='greater'?1-cdf(stat):alt==='less'?cdf(stat):2*(1-cdf(Math.abs(stat))),cr=alt==='two.sided'?q(1-al/2,dist,df):alt==='greater'?q(1-al,dist,df):-q(1-al,dist,df),h=q(1-al/2,dist,df)*se;
+  return{name,stat,p,crit:cr,dist,df,est,ci:[est-h,est+h]}};
+ if(k==='one_t')return fin('One-sample t-test',mean(x1),sd(x1)/Math.sqrt(x1.length),x1.length-1,mu,'t');
+ if(k==='one_z')return fin('One-sample z-test',mean(x1),sg/Math.sqrt(x1.length),0,mu,'z');
+ if(k==='paired_t')return fin('Paired t-test',mean(x1),sd(x1)/Math.sqrt(x1.length),x1.length-1,0,'t');
+ if(k==='welch'||k==='pooled'){const[a,b]=arrs,v1=vr(a),v2=vr(b),n1=a.length,n2=b.length,e=mean(a)-mean(b);
+  if(k==='welch'){const s1=v1/n1,s2=v2/n2;return fin('Welch two-sample t-test',e,Math.sqrt(s1+s2),(s1+s2)**2/(s1**2/(n1-1)+s2**2/(n2-1)),0,'t')}
+  const sp=((n1-1)*v1+(n2-1)*v2)/(n1+n2-2);return fin('Pooled two-sample t-test',e,Math.sqrt(sp*(1/n1+1/n2)),n1+n2-2,0,'t')}
+ let T,m,v,nm;
+ if(k==='wilcox'){const z=x1.map(e=>e-(des==='one'?mu:0)).filter(e=>e!==0),n=z.length,{r,t}=ranks(z.map(Math.abs));T=r.reduce((s,x,i)=>s+(z[i]>0?x:0),0);m=n*(n+1)/4;v=n*(n+1)*(2*n+1)/24-t.reduce((s,x)=>s+x**3-x,0)/48;nm='Wilcoxon signed-rank test (normal approximation)'}
+ else{const[a,b]=arrs,N=a.length+b.length,{r,t}=ranks([...a,...b]);T=r.slice(0,a.length).reduce((s,x)=>s+x,0);m=a.length*(N+1)/2;v=a.length*b.length/12*((N+1)-t.reduce((s,x)=>s+x**3-x,0)/(N*(N-1)));nm='Mann–Whitney U / rank-sum test (normal approximation)'}
+ const dv=T-m,cc=alt==='greater'?-.5:alt==='less'?.5:-.5*Math.sign(dv),stat=(dv+cc)/Math.sqrt(v),cdf=jStat.normal.cdf(stat,0,1),cr=alt==='two.sided'?qn(1-al/2):alt==='greater'?qn(1-al):-qn(1-al);
+ return{name:nm,stat,p:alt==='greater'?1-cdf:alt==='less'?cdf:2*Math.min(cdf,1-cdf),crit:cr,dist:'z',df:0}}
+function region(id,R,alt){const w=Math.max(4,Math.abs(R.stat)*1.2,Math.abs(R.crit)*1.3),xs=[],f=x=>R.dist==='z'?jStat.normal.pdf(x,0,1):jStat.studentt.pdf(x,R.df);
+ for(let i=0;i<=300;i++)xs.push(-w+2*w*i/300);const ys=xs.map(f),c=Math.abs(R.crit),sh=alt==='two.sided'?x=>Math.abs(x)>=c:alt==='greater'?x=>x>=R.crit:x=>x<=R.crit,px=xs.filter(sh);
+ const l=lay('Rejection region (shaded) and observed statistic','test statistic','density');l.height=300;
+ draw(id,[{x:xs,y:ys,mode:'lines',line:{color:'#147d92',width:2}},{x:px,y:px.map(f),fill:'tozeroy',mode:'none',fillcolor:'rgba(217,119,6,.4)'},{x:[R.stat,R.stat],y:[0,Math.max(...ys)*1.05],mode:'lines',line:{color:'#b42318',width:2}}],l)}
+function run(){const d=cur.d,g=cur.groups,names=Object.keys(g),arrs=names.map(n=>g[n]),al=cur.alpha,des=d.design,alt=cur.alt,o=$('out');
+ if((des==='independent'&&arrs.length<2)||arrs.some(a=>a.length<2)||(des==='paired'&&arrs[0].length!==arrs[1].length)){o.innerHTML='<div class="card">Check the data: each group needs at least two values, and paired data needs equal group sizes.</div>';return}
+ const x1=des==='paired'?arrs[0].map((v,i)=>v-arrs[1][i]):arrs[0],res=des==='independent'?arrs.flatMap(a=>a.map(v=>v-mean(a))):x1.map(v=>v-mean(x1));
+ const S=sw(res),L=des==='independent'?bp(arrs):null,D=dw(res,des==='independent'?arrs:[x1]),normOK=S?S.p>=al:true,varOK=L?L.p>=al:true,indOK=D?D.p>=al:true,sg=parseFloat(cur.sg)||0,mu=+cur.mu,A=AS[alt];
+ const H0=des==='one'?'μ = '+mu:des==='paired'?'μ_D = 0':'μ₁ = μ₂',H1=des==='one'?'μ '+A+' '+mu:des==='paired'?'μ_D '+A+' 0':'μ₁ '+A+' μ₂';
+ const rec=des==='one'?(sg>0?'one_z':'one_t'):des==='paired'?'paired_t':(varOK?'pooled':'welch'),kind=cur.test==='recommended'?rec:cur.test,R=runTest(kind,{arrs,x1,alt,al,mu,sg,des});
+ const recTxt={one_t:'One-sample t-test (σ unknown, so t rather than z).',one_z:'One-sample z-test (population σ is known).',paired_t:'Paired t-test on the within-pair differences.',pooled:'Pooled two-sample t-test (the variances look equal).',welch:'Welch two-sample t-test (the variances look different).'}[rec]+(normOK?'':' Normality is doubtful, so consider the rank test from the dropdown.');
+ const rows=names.map((n,i)=>`<tr><td>${n}</td><td>${arrs[i].length}</td><td>${f4(mean(arrs[i]))}</td><td>${f4(sd(arrs[i]))}</td></tr>`).join('')+(des==='paired'?`<tr><td>Difference (${names[0]} − ${names[1]})</td><td>${x1.length}</td><td>${f4(mean(x1))}</td><td>${f4(sd(x1))}</td></tr>`:'');
+ const alsel=`<select id="alt">${[['two.sided','Two-sided (≠)'],['greater','Greater than (>)'],['less','Less than (<)']].map(a=>`<option value="${a[0]}"${a[0]===alt?' selected':''}>${a[1]}</option>`).join('')}</select>`;
+ let h=`<div class="card"><h2><span>1</span>Hypotheses</h2><p class="m">H₀: ${H0}<br>H₁: ${H1}</p><p>Alternative: ${alsel}${des==='one'?` &nbsp; Reference mean μ₀: <input id="mu" type="number" step="any" value="${mu}" style="width:100px"> &nbsp; Known σ (optional): <input id="sg" type="number" step="any" value="${cur.sg}" style="width:90px">`:''}</p>${des==='paired'?'<p class="note">μ_D is the mean of (first − second) within each pair.</p>':''}</div>
+ <div class="card"><h2><span>2</span>Sensitivity (significance level α)</h2><input type="range" id="al" min="0.01" max="0.10" step="0.01" value="${al}" style="width:260px"> <b class="m">α = ${al.toFixed(2)}</b><p class="note">Changing α recomputes every step below.</p></div>
+ <div class="card"><h2><span>3</span>Data summary</h2><table><tr><th>Group</th><th>n</th><th>Mean</th><th>SD</th></tr>${rows}</table></div>
+ <div class="card"><h2><span>4</span>Test and results</h2><p><b>Recommendation:</b> ${recTxt} <span class="note">Assumption checks are in step 6.</span></p>
+ <p>Choose a test: <select id="tst">${TESTS.map(t=>`<option value="${t[0]}"${t[0]===cur.test?' selected':''}>${t[1]}</option>`).join('')}</select></p>`;
+ let rej=false;
+ if(R.err)h+=`<div class="dec">${R.err}</div></div>`;
+ else{rej=R.p<al;h+=`<p><b>${R.name}</b></p><div class="g3"><div>Statistic<br><b class="m">${R.dist==='z'?'z':'t'} = ${f4(R.stat)}</b></div><div>p-value<br><b class="m">${fp(R.p)}</b></div><div>Critical value<br><b class="m">${alt==='two.sided'?'±':''}${f4(Math.abs(R.crit))}</b></div></div>${R.ci?`<p>Estimate = ${f4(R.est)}; ${Math.round((1-al)*100)}% confidence interval: (${f4(R.ci[0])}, ${f4(R.ci[1])})${R.dist==='t'?', df = '+R.df.toFixed(2):''}</p>`:''}<div id="p4"></div></div>`}
+ h+=R.err?`<div class="card"><h2><span>5</span>Decision</h2><p>No decision can be made until a valid test is selected.</p></div>`:`<div class="card"><h2><span>5</span>Decision</h2><div class="dec ${rej?'':'n'}"><b>${rej?'Reject H₀':'Fail to reject H₀'}</b> at α = ${al.toFixed(2)} (p = ${fp(R.p)} ${rej?'<':'≥'} ${al.toFixed(2)}). ${rej?'There is evidence for H₁: '+H1+'.':'There is not enough evidence for H₁.'}</div></div>`;
+ h+=`<div class="card"><h2><span>6</span>Assumption checks</h2>${des==='independent'?'<div class="g"><div id="p1"></div><div id="p2"></div></div><div id="p3"></div>':'<div class="g"><div id="p2"></div><div id="p3"></div></div>'}
+ <p><b>Normality (Shapiro–Wilk on ${des==='paired'?'the paired differences':'residuals'}):</b> ${S?`W = ${S.W.toFixed(4)}, p = ${fp(S.p)} <span class="tag ${normOK?'ok':'bad'}">${normOK?'normality not rejected':'normality rejected'}</span>`:'needs 4 to 2000 values'}<br>
+ <b>Equal variances (Breusch–Pagan, studentized):</b> ${L?`LM = ${L.LM.toFixed(3)}, df = ${L.df}, p = ${fp(L.p)} <span class="tag ${varOK?'ok':'bad'}">${varOK?'variances similar':'variances differ'}</span>`:'not applicable (one set of values)'}<br>
+ <b>Independence (Durbin–Watson):</b> ${D?`d = ${D.d.toFixed(3)}, p = ${fp(D.p)} <span class="tag ${indOK?'ok':'bad'}">${indOK?'no autocorrelation detected':'autocorrelation detected'}</span>`:'not computable'}</p>
+ <p class="note">Durbin–Watson is only meaningful when the rows are listed in the order the runs were performed.</p></div>`;
+ o.innerHTML=h;
+ $('alt').onchange=e=>{cur.alt=e.target.value;run()};$('tst').onchange=e=>{cur.test=e.target.value;run()};$('al').oninput=e=>{cur.alpha=+e.target.value;run()};
+ if($('mu')){$('mu').onchange=e=>{cur.mu=e.target.value;run()};$('sg').onchange=e=>{cur.sg=e.target.value;run()}}
+ if(!R.err)region('p4',R,alt);
+ if(des==='independent'){const fit=arrs.flatMap(a=>a.map(()=>mean(a)));draw('p1',[{x:fit,y:res,mode:'markers',marker:{color:'#147d92'}},{x:[Math.min(...fit),Math.max(...fit)],y:[0,0],mode:'lines',line:{color:'#d97706',dash:'dash'}}],lay('Residuals vs fitted','fitted value','residual'))}
+ const sr=[...res].sort((a,b)=>a-b),th=sr.map((_,i)=>qn((i+.5)/sr.length)),s2=sd(res);
+ draw('p2',[{x:th,y:sr,mode:'markers',marker:{color:'#147d92'}},{x:[th[0],th[th.length-1]],y:[th[0]*s2,th[th.length-1]*s2],mode:'lines',line:{color:'#d97706'}}],lay('Normal Q–Q plot','theoretical quantile','residual'));
+ const l3=lay('Residuals vs run order','observation order','residual');l3.height=240;draw('p3',[{x:res.map((_,i)=>i+1),y:res,mode:'markers',marker:{color:'#147d92'}}],l3)}
+init();
+</script></body></html>
