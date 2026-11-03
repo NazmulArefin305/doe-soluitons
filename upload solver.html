@@ -1,0 +1,304 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Upload your own data · DOE Solutions</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{--ink:#17212b;--mut:#5b6773;--line:#d5dbe0;--bg:#f6f8f9;--teal:#147d92;--amb:#d97706;--red:#b42318;--ok:#157347}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--bg);display:flex;min-height:100vh}
+aside{width:310px;background:#10222b;color:#dbe7ec;padding:20px 16px;position:sticky;top:0;height:100vh;overflow:auto;flex:none}
+aside h1{font-size:17px;margin:0 0 14px;color:#fff}aside label{font-size:12px;color:#8fb0bd}
+select,textarea,button{font:inherit}aside select{width:100%;padding:7px;margin:4px 0 14px;border-radius:6px;border:0}
+main{flex:1;min-width:0;width:100%;max-width:1100px;margin:0 auto;padding:clamp(14px,3vw,34px)}
+.card{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px}
+.card h2{margin:0 0 10px;font-size:17px}.card h2 span{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--teal);color:#fff;font-size:13px;margin-right:8px}
+.m{font-family:'IBM Plex Mono',monospace}.note{color:var(--mut);font-size:13px}
+.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;color:#fff;background:var(--mut)}.ok{background:var(--ok)}.bad{background:var(--red)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+textarea{width:100%;height:110px;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.dec{font-size:16px;padding:12px 14px;border-left:4px solid var(--red);background:#fdf1ef}.dec.n{border-color:var(--ok);background:#eef8f2}
+@media(max-width:900px){body{display:block}aside{width:auto;height:auto;position:static;padding:14px}aside select{margin-bottom:8px}.g,.g3{grid-template-columns:1fr}}
+@media(max-width:480px){body{font-size:14px}.card{padding:14px}input[type=range]{width:100%!important}}
+details.card summary{cursor:pointer}input[type=number]{padding:3px 5px;font:inherit}.gn a.lab{background:none}.tw{overflow-x:auto}aside textarea{width:100%;height:120px;margin:4px 0 8px;font-size:12px}aside input[type=file]{width:100%;color:#dbe7ec;margin:4px 0 14px;font-size:13px}aside button{padding:7px 12px;border:0;border-radius:6px;background:#d97706;color:#fff;cursor:pointer;margin-bottom:12px}aside details{margin-bottom:12px}aside summary{cursor:pointer;color:#8fd3e0;font-size:13px}#stmt{height:150px}h4{margin:6px 0}</style><style id="gn-css">.gn{flex:0 0 100%;width:100%;position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;background:#0b1a21;padding:8px 16px;font:14px/1.2 'IBM Plex Sans',sans-serif;border-bottom:1px solid #1d3744}
+.gn a{color:#b9d3dc;text-decoration:none;padding:6px 10px;border-radius:6px}.gn a:hover{background:#1b3641;color:#fff}.gn a.on{background:#147d92;color:#fff}.gn .home{font-weight:600;color:#fff;letter-spacing:.02em}
+.gn .grp{display:flex;flex-wrap:wrap;align-items:center;gap:2px}.gn .lab{color:#8fd3e0;font-weight:600;background:none;margin:0;display:inline}.gn .lab.on{color:#fff}
+@media(min-width:901px){body{flex-wrap:wrap}aside{top:46px!important;height:calc(100vh - 46px)!important;width:340px!important}}aside select{font-size:14px}
+@media(max-width:600px){.gn{gap:2px 8px;padding:6px 8px}.gn a{padding:6px 7px}}</style></head><body><nav class="gn"><a class="home" href="index.html">DOE · STAT-530</a><div class="grp"><a class="lab" href="interactive%20solver.html">Interactive solver</a><a href="chapter%202.html">Chapter 2</a><a href="chapter%203.html">Chapter 3</a><a href="chapter%204.html">Chapter 4</a><a href="chapter%205.html">Chapter 5</a><a class=on href="upload%20solver.html">Upload data</a></div><div class="grp"><a class="lab" href="textbook%20solver.html">Textbook solver</a><a href="textbook%20chapter%202.html">Chapter 2</a><a href="textbook%20chapter%203.html">Chapter 3</a><a href="textbook%20chapter%204.html">Chapter 4</a><a href="textbook%20chapter%205.html">Chapter 5</a></div></nav>
+<aside><h1>Design &amp; Analysis of Experiments<br><span style="font-weight:400;font-size:13px">Upload your own data</span></h1>
+<label>Chapter</label><select id="ch"></select>
+<label>1. Data file (CSV, first row = column names)</label><input type="file" id="file" accept=".csv,.tsv,.txt">
+<details><summary>…or paste CSV text</summary><textarea id="csvtxt" placeholder="Temp,Pressure,Yield&#10;100,25,5.2&#10;..."></textarea><button id="paste">Use pasted data</button></details>
+<label>2. Problem statement (optional but helpful)</label><textarea id="stmt" placeholder="Describe the experiment: the response, the factors, whether there are blocks or pairs, the significance level, a hypothesized mean…"></textarea>
+<button id="redo">Re-detect design from statement</button>
+<label>Or try an example</label><select id="ex"><option value="">Choose an example…</option></select>
+</aside>
+<main id="main"></main>
+<script>
+
+const $=id=>document.getElementById(id),qn=p=>jStat.normal.inv(p,0,1),mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const vr=a=>{const m=mean(a);return a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1)};
+const f4=x=>Math.abs(x)<1e-4&&x!==0?x.toExponential(2):Math.abs(x)<1?x.toFixed(5):x.toFixed(4),fp=p=>p<1e-4?'< 0.0001':p.toFixed(4);
+const med=a=>{const s=[...a].sort((x,y)=>x-y),h=s.length>>1;return s.length%2?s[h]:(s[h-1]+s[h])/2};
+/* ---------- statistics ---------- */
+function sw(x0){const n=x0.length;if(n<4||n>2000)return null;const x=[...x0].sort((a,b)=>a-b);
+ const m=x.map((_,i)=>qn((i+1-.375)/(n+.25))),ssm=m.reduce((s,v)=>s+v*v,0),u=1/Math.sqrt(n),sq=Math.sqrt(ssm);
+ const P=c=>c[0]*u**5+c[1]*u**4+c[2]*u**3+c[3]*u**2+c[4]*u,a=new Array(n).fill(0);
+ a[n-1]=P([-2.706056,4.434685,-2.07119,-.147981,.221157])+m[n-1]/sq;let phi;
+ if(n>5){a[n-2]=P([-3.582633,5.682633,-1.752461,-.293762,.042981])+m[n-2]/sq;
+  phi=(ssm-2*m[n-1]**2-2*m[n-2]**2)/(1-2*a[n-1]**2-2*a[n-2]**2);for(let i=2;i<n-2;i++)a[i]=m[i]/Math.sqrt(phi);a[0]=-a[n-1];a[1]=-a[n-2]}
+ else{phi=(ssm-2*m[n-1]**2)/(1-2*a[n-1]**2);for(let i=1;i<n-1;i++)a[i]=m[i]/Math.sqrt(phi);a[0]=-a[n-1]}
+ const mu=mean(x);let nu=0,de=0;x.forEach((v,i)=>{nu+=a[i]*v;de+=(v-mu)**2});if(de===0)return null;
+ const W=Math.min(nu*nu/de,.99999999),L=Math.log(n);let z;
+ if(n>=12){const y=Math.log(1-W);z=(y-(.0038915*L**3-.083751*L**2-.31082*L-1.5861))/Math.exp(.0030302*L**2-.082676*L-.4803)}
+ else{const y=-Math.log(-2.273+.459*n-Math.log(1-W));z=(y-(.544-.39978*n+.025054*n**2-.0006714*n**3))/Math.exp(1.3822-.77857*n+.062767*n**2-.0020322*n**3)}
+ return{W,p:1-jStat.normal.cdf(z,0,1)}}
+function anova(arrs){const k=arrs.length,N=arrs.reduce((s,a)=>s+a.length,0),gm=mean(arrs.flat());
+ const ssb=arrs.reduce((s,a)=>s+a.length*(mean(a)-gm)**2,0),ssw=arrs.reduce((s,a)=>s+(a.length-1)*vr(a),0);
+ const d1=k-1,d2=N-k,F=(ssb/d1)/(ssw/d2);return{ssb,ssw,d1,d2,msb:ssb/d1,mse:ssw/d2,F,p:1-jStat.centralF.cdf(F,d1,d2)}}
+function bp(arrs){const A=anova(arrs.map(a=>{const m=mean(a);return a.map(v=>(v-m)**2)})),sst=A.ssb+A.ssw,N=arrs.flat().length;if(!(sst>0))return null;
+ const LM=N*A.ssb/sst,df=arrs.length-1;return{LM,df,p:1-jStat.chisquare.cdf(LM,df)}}
+function dw(e,arrs){const n=e.length,gi=[],ng=[],df=n-arrs.length;arrs.forEach((a,i)=>{ng[i]=a.length;a.forEach(()=>gi.push(i))});if(df<2)return null;
+ let num=0,den=0;for(let t=0;t<n;t++){den+=e[t]**2;if(t)num+=(e[t]-e[t-1])**2}if(!den)return null;
+ const M=(i,j)=>(i===j?1:0)-(gi[i]===gi[j]?1/ng[gi[i]]:0),Aa=(i,j)=>i===j?(i===0||i===n-1?1:2):Math.abs(i-j)===1?-1:0,B=[];
+ for(let i=0;i<n;i++){B[i]=[];for(let j=0;j<n;j++){let s=0;for(let q=Math.max(0,j-1);q<=Math.min(n-1,j+1);q++)s+=M(i,q)*Aa(q,j);B[i][j]=s}}
+ let t1=0,t2=0;for(let i=0;i<n;i++){t1+=B[i][i];for(let j=0;j<n;j++)t2+=B[i][j]*B[j][i]}
+ const Ed=t1/df,V=2*(t2-t1*Ed)/(df*(df+2));if(!(V>0))return null;const d=num/den,c=jStat.normal.cdf((d-Ed)/Math.sqrt(V),0,1);return{d,p:2*Math.min(c,1-c)}}
+const lay=(t,x,y)=>({title:{text:t,font:{size:13}},xaxis:{title:x},yaxis:{title:y},margin:{l:50,r:10,t:34,b:42},height:260,paper_bgcolor:'rgba(0,0,0,0)',font:{family:'IBM Plex Sans'},showlegend:false});
+const draw=(id,tr,l)=>Plotly.newPlot(id,tr,l,{displayModeBar:false,responsive:true});
+function regionPlot(id,type,stat,crit,d1,d2){const xs=[],ys=[];let lo,hi;
+ if(type==='F'){lo=.02;hi=Math.max(crit*2,stat*1.2,6)}else{const w=Math.max(4,Math.abs(stat)*1.2,Math.abs(crit)*1.3);lo=-w;hi=w}
+ for(let i=0;i<=300;i++){const x=lo+(hi-lo)*i/300;xs.push(x);ys.push(type==='F'?jStat.centralF.pdf(x,d1,d2):jStat.studentt.pdf(x,d1))}
+ const tr=[{x:xs,y:ys,mode:'lines',line:{color:'#147d92',width:2}}];
+ const tail=f=>{const px=xs.filter(f);return{x:px,y:px.map(x=>type==='F'?jStat.centralF.pdf(x,d1,d2):jStat.studentt.pdf(x,d1)),fill:'tozeroy',mode:'none',fillcolor:'rgba(217,119,6,.4)'}};
+ tr.push(tail(x=>type==='F'?x>=crit:Math.abs(x)>=Math.abs(crit)&&(x<0)===(x<0)));
+ const top=Math.max(...ys.filter(isFinite))*1.05;
+ tr.push({x:[stat,stat],y:[0,top],mode:'lines',line:{color:'#b42318',width:2}});
+ const l=lay(type==='F'?'F distribution — rejection region (shaded)':'t distribution — rejection regions (shaded)','test statistic','density');l.height=300;draw(id,tr,l)}
+
+const sdv=a=>Math.sqrt(vr(a));
+function lm(y,cols){const n=y.length,p=cols.length,A=[];
+ for(let i=0;i<p;i++){A[i]=[];for(let j=0;j<p;j++){let s=0;for(let k=0;k<n;k++)s+=cols[i][k]*cols[j][k];A[i][j]=s}for(let j=0;j<p;j++)A[i][p+j]=i===j?1:0}
+ for(let i=0;i<p;i++){let m=i;for(let r=i+1;r<p;r++)if(Math.abs(A[r][i])>Math.abs(A[m][i]))m=r;if(Math.abs(A[m][i])<1e-9)return null;[A[i],A[m]]=[A[m],A[i]];const d=A[i][i];for(let j=0;j<2*p;j++)A[i][j]/=d;for(let r=0;r<p;r++)if(r!==i){const f=A[r][i];if(f)for(let j=0;j<2*p;j++)A[r][j]-=f*A[i][j]}}
+ const C=A.map(r=>r.slice(p)),xy=cols.map(c=>c.reduce((s,v,k)=>s+v*y[k],0)),b=C.map(r=>r.reduce((s,v,j)=>s+v*xy[j],0)),fit=y.map((_,k)=>cols.reduce((s,c,j)=>s+c[k]*b[j],0));
+ return{b,C,fit,p,cols,rss:y.reduce((s,v,k)=>s+(v-fit[k])**2,0)}}
+function dwM(e,L){const n=e.length,{C,cols,p}=L,df=n-p;let num=0,den=0;for(let t=0;t<n;t++){den+=e[t]**2;if(t)num+=(e[t]-e[t-1])**2}if(!den||df<2)return null;
+ const M=[];for(let i=0;i<n;i++){M[i]=[];for(let j=0;j<n;j++){let s=i===j?1:0;for(let a=0;a<p;a++){if(!cols[a][i])continue;for(let b=0;b<p;b++)s-=cols[a][i]*C[a][b]*cols[b][j]}M[i][j]=s}}
+ const Aa=(i,j)=>i===j?(i===0||i===n-1?1:2):Math.abs(i-j)===1?-1:0,B=[];
+ for(let i=0;i<n;i++){B[i]=[];for(let j=0;j<n;j++){let s=0;for(let q=Math.max(0,j-1);q<=Math.min(n-1,j+1);q++)s+=M[i][q]*Aa(q,j);B[i][j]=s}}
+ let t1=0,t2=0;for(let i=0;i<n;i++){t1+=B[i][i];for(let j=0;j<n;j++)t2+=B[i][j]*B[j][i]}
+ const Ed=t1/df,V=2*(t2-t1*Ed)/(df*(df+2));if(!(V>0))return null;const d=num/den,c=jStat.normal.cdf((d-Ed)/Math.sqrt(V),0,1);return{d,p:2*Math.min(c,1-c)}}
+const pc=m=>{let c=0;while(m){c+=m&1;m>>=1}return c};
+const fpv=(F,a,b)=>1-jStat.centralF.cdf(F,a,b);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const f5=x=>x===null||x===undefined||!isFinite(x)?'—':Math.abs(x)<1e-4&&x!==0?x.toExponential(2):Math.abs(x)<1?x.toFixed(5):Math.abs(x)>=1e6?x.toExponential(3):x.toFixed(4);
+const pcard=(n,t,b)=>`<div class="card"><h2><span>${n}</span>${t}</h2>${b}</div>`;
+const COLS=['#147d92','#d97706','#6b5ca5','#b42318','#157347','#555','#c026d3','#0891b2'];
+const ROLE={resp:'Response',fac:'Factor',blk:'Block',ord:'Run order',ign:'Ignore'};
+let S={raw:null,file:'',cols:[],roles:{},stmt:'',alpha:.05,tr:'none',model:'auto',tt:'t',ph:null,pm:'tukey',term:0,mu0:0,hints:[]};
+/* ---------- CSV ---------- */
+function parseCSV(t){t=t.replace(/^\uFEFF/,'');const first=t.split(/\r?\n/)[0]||'',dl=[',',';','\t'].map(d=>[d,first.split(d).length]).sort((a,b)=>b[1]-a[1])[0][0];
+ const rows=[];let cur=[],f='',q=false;
+ for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c==='"')q=true;else if(c===dl){cur.push(f);f=''}
+  else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;cur.push(f);f='';if(cur.some(x=>x.trim()!==''))rows.push(cur);cur=[]}else f+=c}
+ cur.push(f);if(cur.some(x=>x.trim()!==''))rows.push(cur);return rows}
+const isMiss=v=>v===undefined||/^\s*(|na|n\/a|nan|null|\.)\s*$/i.test(v);
+function loadCSV(text,name){const rows=parseCSV(text);if(rows.length<2){alert('The file needs a header row and at least one data row.');return}
+ const hd=rows[0].map((h,i)=>h.trim()||'Column'+(i+1)),data=rows.slice(1).map(r=>hd.map((_,i)=>(r[i]===undefined?'':r[i]).trim()));
+ S.raw={hd,data};S.file=name;S.cols=hd.map((h,j)=>{const v=data.map(r=>r[j]),nm=v.filter(x=>!isMiss(x)),isnum=nm.length>0&&nm.every(x=>isFinite(+x.replace(/,/g,''))&&x!==''),u=[...new Set(nm)];
+  const lv=isnum?u.sort((a,b)=>+a-+b):u;return{name:h,j,num:isnum,uniq:u.length,miss:v.length-nm.length,levels:lv}});
+ detect();S.ph=null;S.term=0;go()}
+/* ---------- statement hints and role detection ---------- */
+function readStmt(){const t=S.stmt,h=[];S.hintsObj={};
+ let m=t.match(/(?:alpha|α|significance level)\s*(?:=|of|is|at)?\s*(0?\.\d+)/i)||t.match(/(\d+(?:\.\d+)?)\s*%\s*(?:level|significance)/i);
+ if(m){let a=+m[1];if(a>1)a/=100;if(a>0&&a<.5){S.hintsObj.alpha=Math.min(.1,Math.max(.01,a));h.push('significance level α = '+a)}}
+ m=t.match(/(?:mu|μ|mean|hypothesi[sz]ed (?:mean|value)|target)\s*(?:0|₀)?\s*(?:=|equals|of|is|at)\s*(-?\d+(?:\.\d+)?)/i)||t.match(/(?:compared (?:with|to|against)|against)\s*(?:a |the )?(?:standard|target|value|mean)?\s*(?:of)?\s*(-?\d+(?:\.\d+)?)/i);
+ if(m){S.hintsObj.mu0=+m[1];h.push('hypothesized mean μ₀ = '+m[1])}
+ if(/paired|before and after|matched pairs|same (?:subjects|units|patients)/i.test(t)){S.hintsObj.paired=1;h.push('paired data')}
+ if(/log[- ]?transform|natural log|logarithm/i.test(t)){S.hintsObj.tr='log';h.push('log transformation')}else if(/square[- ]root transform/i.test(t)){S.hintsObj.tr='sqrt';h.push('square-root transformation')}
+ if(/latin square/i.test(t)){S.hintsObj.latin=1;h.push('Latin square design')}
+ if(/\bblock(?:s|ed|ing)?\b/i.test(t)){S.hintsObj.block=1;h.push('blocking mentioned')}
+ if(/unreplicated|one observation (?:at|per|in) each|single replicate/i.test(t)){h.push('unreplicated experiment')}
+ S.hints=h}
+function detect(){readStmt();const t=S.stmt.toLowerCase(),C=S.cols;if(!C.length)return;S.roles={};
+ const isBlockName=n=>/^(blocks?|batch(es)?|day|days|replicates?|reps?|session|subject|subjects|lot|lots|block\w*)$/i.test(n.trim());
+ const mention=n=>new RegExp('\\b'+n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(t);
+ let resp=null;C.filter(c=>c.num).forEach(c=>{if(new RegExp('\\b(?:response|outcome|dependent|measured|measure|measuring)\\b[^.]{0,50}\\b'+c.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(t))resp=resp||c});
+ if(!resp){const nc=C.filter(c=>c.num&&c.uniq>1);resp=nc.length?nc.reduce((b,c)=>(c.uniq/S.raw.data.length>=b.uniq/S.raw.data.length&&(c.uniq>b.uniq||c.j>b.j))?c:b):C[C.length-1]}
+ C.forEach(c=>{let r;if(c===resp)r='resp';else if(/^(run|order|run[ _]?order|seq|sequence|obs|observation|index|id|time[ _]?order|std[ _]?order)$/i.test(c.name.trim())&&c.num)r='ord';
+  else if(c.uniq<2)r='ign';else if(c.num&&c.uniq>10)r='ign';else if(c.uniq>S.raw.data.length*0.6&&c.uniq>6)r='ign';
+  else if(isBlockName(c.name)||new RegExp('block(?:ed|ing|s)?\\s*(?:by|on|factor|variable|is|=|:)?\\s*(?:the )?\\b'+c.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(t)||new RegExp('\\b'+c.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b\\s*(?:is|are|as|acts as)\\s*(?:a |the )?(?:block|blocking)').test(t))r='blk';else r='fac';
+  S.roles[c.j]=r});
+ if(S.hintsObj.alpha)S.alpha=S.hintsObj.alpha;if(S.hintsObj.mu0!==undefined)S.mu0=S.hintsObj.mu0;if(S.hintsObj.tr)S.tr=S.hintsObj.tr}
+/* ---------- build analysis data ---------- */
+function buildData(){const C=S.cols,R=S.roles,ri=C.findIndex(c=>R[c.j]==='resp');if(ri<0||!C[ri].num)return{err:'Choose one numeric column as the Response.'};
+ const fi=C.filter(c=>R[c.j]==='fac'),bi=C.filter(c=>R[c.j]==='blk'),oi=C.find(c=>R[c.j]==='ord'),notes=[];
+ let rows=S.raw.data.map((r,k)=>({k,y:isMiss(r[ri])?NaN:+r[ri].replace(/,/g,''),f:fi.map(c=>r[c.j]),b:bi.map(c=>r[c.j]),o:oi?+r[oi.j]:k}));
+ const n0=rows.length;rows=rows.filter(r=>isFinite(r.y)&&r.f.every(v=>!isMiss(v))&&r.b.every(v=>!isMiss(v)));if(rows.length<n0)notes.push((n0-rows.length)+' row(s) with missing values were removed.');
+ if(oi)rows.sort((a,b)=>a.o-b.o);
+ const tf=S.tr==='log'?Math.log:S.tr==='sqrt'?Math.sqrt:x=>x;rows.forEach(r=>r.y=tf(r.y));if(rows.some(r=>!isFinite(r.y)))return{err:'The '+S.tr+' transformation needs positive values; set the transformation back to “none”.'};
+ let fac=fi.map(c=>c.name),lvs=fi.map((c,i)=>{const u=[...new Set(rows.map(r=>r.f[i]))];return c.num&&u.every(x=>isFinite(+x))?u.sort((a,b)=>+a-+b):u});
+ const keep=lvs.map(l=>l.length>1);keep.forEach((k,i)=>{if(!k)notes.push(`Factor “${fac[i]}” has only one level in the usable rows and was left out.`)});
+ const bn=bi.map(c=>c.name),bl=bi.map((c,i)=>[...new Set(rows.map(r=>r.b[i]))]);
+ return{rows,resp:C[ri].name,fac:fac.filter((_,i)=>keep[i]),lv:lvs.filter((_,i)=>keep[i]),fidx:fi.map((_,i)=>i).filter(i=>keep[i]),bn,bl,notes,ordered:!!oi}}
+/* ---------- model ---------- */
+function fitANOVA(D){const {rows,fac,lv,fidx,bn,bl}=D,nf=fac.length,N=rows.length,y=rows.map(r=>r.y);
+ if(nf>4)return{err:'More than 4 factors are not supported; set some columns to Ignore.'};if(N<4)return{err:'Too few observations.'};
+ const L=lv.map(a=>a.length),ix=rows.map(r=>fidx.map((fi,j)=>lv[j].indexOf(r.f[fi]))),bx=rows.map(r=>r.b.map((v,b)=>bl[b].indexOf(v)));
+ const cnt={};ix.forEach(a=>{const k=a.join('|');cnt[k]=(cnt[k]||0)+1});const cn=Object.values(cnt),ncells=L.reduce((a,b)=>a*b,1),minc=Math.min(...cn),maxc=Math.max(...cn),balanced=cn.length===ncells&&minc===maxc;
+ const one=y.map(()=>1),code=(l,Lj)=>[...Array(Lj-1)].map((_,k)=>(l===k?1:0)-(l===Lj-1?1:0)),fcols=lv.map((_,j)=>[...Array(L[j]-1)].map((_,k)=>ix.map(a=>(a[j]===k?1:0)-(a[j]===L[j]-1?1:0))));
+ const bcols=bl.map((a,b)=>[...Array(a.length-1)].map((_,k)=>bx.map(r=>(r[b]===k?1:0)-(r[b]===a.length-1?1:0))));
+ const tcols=m=>{let cs=[one];fac.forEach((_,j)=>{if(m>>j&1){const nw=[];cs.forEach(a=>fcols[j].forEach(b=>nw.push(a.map((v,i)=>v*b[i]))));cs=nw}});return cs.slice(0)};
+ const NM=1<<nf;let masks=[];for(let m=1;m<NM;m++)masks.push(m);masks.sort((a,b)=>pc(a)-pc(b)||a-b);
+ const notes=[];if(S.model==='add')masks=masks.filter(m=>pc(m)===1);
+ const bdf=bcols.reduce((s,c)=>s+c.length,0);
+ const build=ms=>{const terms=ms.map(m=>({m,name:fac.filter((_,j)=>m>>j&1).join(' × '),ord:pc(m),cols:tcols(m)})),all=[one],idx=[];terms.forEach(t=>{t.at=all.length;all.push(...t.cols)});const bt=bcols.map((c,b)=>{const o={name:bn[b]+' (block)',blk:1,ord:0,cols:c,at:all.length};all.push(...c);return o});return{terms,bt,all}};
+ let ms=masks.slice(),B=build(ms),LM=lm(y,B.all);
+ /* reduce until the model is estimable with at least 1 residual df */
+ while(ms.length&&(!LM||N-LM.p<1)){const top=Math.max(...ms.map(pc));const drop=ms.filter(m=>pc(m)===top);if(top===1&&ms.length<=1)break;ms=ms.filter(m=>pc(m)!==top);if(maxc>1||!LM)notes.push((LM?'No residual df remain with all interactions, so':'The design matrix is singular (confounded or missing cells), so')+' the '+(top===1?'main':top+'-factor interaction')+' term(s) '+drop.map(m=>fac.filter((_,j)=>m>>j&1).join('×')).join(', ')+' were left out of the model.');B=build(ms);LM=lm(y,B.all)}
+ if(!LM||N-LM.p<1)return{err:'The model cannot be fitted: too few observations for the chosen factors and blocks, or the design is singular.'};
+ const dfE=N-LM.p,rss=LM.rss,mse=rss/dfE,sst=y.reduce((s,v)=>s+(v-mean(y))**2,0);
+ const tests=[...B.terms,...B.bt].map(t=>{const idxs=new Set(t.cols.map((_,i)=>t.at+i)),rest=B.all.filter((_,i)=>!idxs.has(i)),R0=lm(y,rest),ss=R0?R0.rss-rss:NaN;return{name:t.name,m:t.m,ord:t.ord,blk:t.blk,ss,df:t.cols.length,ms:ss/t.cols.length}});
+ tests.forEach(t=>{t.F=t.ms/mse;t.p=fpv(t.F,t.df,dfE)});
+ let nonadd=null;
+ if(maxc===1&&nf===2&&balanced&&!bn.length&&S.model!=='full'){const a=L[0],b=L[1],Y={},Ti=[],Tj=[];y.forEach((v,i)=>{Y[ix[i][0]+'|'+ix[i][1]]=v;Ti[ix[i][0]]=(Ti[ix[i][0]]||0)+v;Tj[ix[i][1]]=(Tj[ix[i][1]]||0)+v});
+  const yy=y.reduce((s,v)=>s+v,0);let sp=0;for(let i=0;i<a;i++)for(let j=0;j<b;j++)sp+=Y[i+'|'+j]*Ti[i]*Tj[j];const SA=tests[0].ss,SB=tests[1].ss;
+  if(SA>0&&SB>0&&dfE>1){const ssn=(sp-yy*(SA+SB+yy*yy/(a*b)))**2/(a*b*SA*SB),rs=rss-ssn,rd=dfE-1,F=ssn/(rs/rd);nonadd={ss:ssn,rs,rd,F,p:fpv(F,1,rd)}}}
+ const res=y.map((v,k)=>v-LM.fit[k]);
+ return{y,N,nf,fac,lv,L,ix,bx,bn,bl,B,tests,LM,rss,dfE,mse,sst,res,fit:LM.fit,nonadd,balanced,minc,maxc,notes,ms,code,fidx,rows,tcolsOf:tcols}}
+/* design-row averaging for least-squares means and contrasts */
+function xrow(M,lvIdx){const r=[1];M.B.terms.forEach(t=>{let cur=[1];M.fac.forEach((_,j)=>{if(t.m>>j&1){const c=M.code(lvIdx[j],M.L[j]),nw=[];cur.forEach(a=>c.forEach(b=>nw.push(a*b)));cur=nw}});r.push(...cur)});M.bl.forEach(a=>{for(let k=0;k<a.length-1;k++)r.push(0)});return r}
+function lsRow(M,fix){const free=M.fac.map((_,j)=>j).filter(j=>!(j in fix));let acc=null,cnt=0;const rec=(k,cur)=>{if(k===free.length){const r=xrow(M,cur);acc=acc?acc.map((v,i)=>v+r[i]):r;cnt++;return}for(let l=0;l<M.L[free[k]];l++){cur[free[k]]=l;rec(k+1,cur)}};const base=[];Object.keys(fix).forEach(j=>base[j]=fix[j]);rec(0,base.slice());return acc.map(v=>v/cnt)}
+function contrastStat(M,ra,rb){const c=ra.map((v,i)=>v-rb[i]),d=c.reduce((s,v,i)=>s+v*M.LM.b[i],0);let q=0;for(let i=0;i<c.length;i++)for(let j=0;j<c.length;j++)q+=c[i]*M.LM.C[i][j]*c[j];return{d,se:Math.sqrt(Math.max(q,0)*M.mse)}}
+/* ---------- shared pieces ---------- */
+const alphaCard=(n,al)=>`<div class="card"><h2><span>${n}</span>Sensitivity (significance level α)</h2><input type="range" id="al" min="0.01" max="0.10" step="0.01" value="${al}" style="width:260px"> <b class="m">α = ${al.toFixed(2)}</b><p class="note">Changing α recomputes the analysis below.</p></div>`;
+function checksHTML(n,res,fit,LM,groups,gnote,al,ordered){const Sw=sw(res),okB=groups&&groups.length>1&&groups.every(g=>g.length>1),e2=okB?groups.map(g=>g.map(i=>res[i]**2)):null,A2=okB?anova(e2):null,LMb=A2?res.length*A2.ssb/(A2.ssb+A2.ssw):null,pb=LMb!==null?1-jStat.chisquare.cdf(LMb,groups.length-1):null,D=res.length<=600?dwM(res,LM):null;
+ const nO=Sw?Sw.p>=al:true,vO=pb===null?true:pb>=al,iO=D?D.p>=al:true,bad=[!nO&&'normality',!vO&&'equal variance',!iO&&'independence'].filter(Boolean);
+ return pcard(n,'Assumption checks',`<h4 style="margin:4px 0">Informal checks (plots)</h4><div class="g"><div id="p1"></div><div id="p2"></div></div><div id="p3"></div>
+ <h4 style="margin:10px 0 4px">Formal tests</h4><table><tr><th>Assumption</th><th>Test</th><th>Statistic</th><th>p-value</th><th>Conclusion at α</th></tr>
+ <tr><td>Normality</td><td>Shapiro–Wilk (residuals)</td><td>${Sw?'W = '+Sw.W.toFixed(4):'—'}</td><td>${Sw?fp(Sw.p):'—'}</td><td>${Sw?`<span class="tag ${nO?'ok':'bad'}">${nO?'not rejected':'rejected'}</span>`:'not available'}</td></tr>
+ <tr><td>Equal variances</td><td>Breusch–Pagan (studentized)${gnote?'<br><span class="note">'+gnote+'</span>':''}</td><td>${pb!==null?'LM = '+LMb.toFixed(3)+', df = '+(groups.length-1):'—'}</td><td>${pb!==null?fp(pb):'—'}</td><td>${pb!==null?`<span class="tag ${vO?'ok':'bad'}">${vO?'not rejected':'rejected'}</span>`:'not available'}</td></tr>
+ <tr><td>Independence</td><td>Durbin–Watson</td><td>${D?'d = '+D.d.toFixed(3):'—'}</td><td>${D?fp(D.p):'—'}</td><td>${D?`<span class="tag ${iO?'ok':'bad'}">${iO?'not rejected':'rejected'}</span>`:'not available'}</td></tr></table>
+ <p>${bad.length?`<b>Possible violation:</b> ${bad.join(', ')}. Consider a transformation (log or square root, in the method card), a robust or nonparametric alternative, or check how the data were collected.`:'<b>No assumption is rejected</b> at this α, so the standard analysis is reasonable.'}</p>
+ <p class="note">Durbin–Watson is only meaningful when rows are in the order the runs were performed${ordered?' (using your Run order column)':' (no Run order column was chosen, so file order is used)'}.</p>`)}
+function drawChecks(res,fit){draw('p1',[{x:fit,y:res,mode:'markers',marker:{color:'#147d92'}},{x:[Math.min(...fit),Math.max(...fit)],y:[0,0],mode:'lines',line:{color:'#d97706',dash:'dash'}}],lay('Residuals vs fitted','fitted value','residual'));
+ const sr=[...res].sort((a,b)=>a-b),th=sr.map((_,i)=>qn((i+.5)/sr.length)),s2=sdv(res);
+ draw('p2',[{x:th,y:sr,mode:'markers',marker:{color:'#147d92'}},{x:[th[0],th[th.length-1]],y:[th[0]*s2,th[th.length-1]*s2],mode:'lines',line:{color:'#d97706'}}],lay('Normal Q–Q plot of residuals','theoretical quantile','residual'));
+ const l3=lay('Residuals vs run order','observation order','residual');l3.height=220;draw('p3',[{x:res.map((_,i)=>i+1),y:res,mode:'lines+markers',marker:{color:'#147d92'},line:{color:'#9fb7bf',width:1}},{x:[1,res.length],y:[0,0],mode:'lines',line:{color:'#d97706',dash:'dash'}}],l3)}
+const tag=(ok,a,b)=>`<span class="tag ${ok?'ok':'bad'}">${ok?a:b}</span>`;
+/* ---------- main render ---------- */
+function go(){const o=$('main');if(!S.raw){o.innerHTML=`<div class="card"><h2>Upload a CSV file to begin</h2><p>Use the panel on the left: choose a CSV file (first row = column names), type or paste the problem statement, or load one of the examples. The solver will show the data, choose a method, check the assumptions and run post hoc comparisons when needed.</p><p class="note">Supported methods: one-sample, two-sample and paired t tests; one-way ANOVA; randomized block and Latin-square designs; two-, three- and four-way factorial ANOVA (with or without blocks); unreplicated factorials (Tukey one-df test). Tukey and Fisher LSD post hoc comparisons.</p></div>`;return}
+ const D=buildData(),al=S.alpha;let h=dataCard(D);
+ if(D.err){o.innerHTML=h+`<div class="card"><b>${esc(D.err)}</b></div>`;wireData();return}
+ const nf=D.fac.length,nb=D.bn.length,y=D.rows.map(r=>r.y);
+ /* method choice */
+ let kind;const levs2=nf===1&&D.lv[0].length===2;
+ const pairOK=()=>{if(!(levs2&&nb===1))return false;const cnt={};D.rows.forEach(r=>{const k=r.b[0]+'|'+r.f[D.fidx[0]];cnt[k]=(cnt[k]||0)+1});return D.bl[0].every(b=>D.lv[0].every(l=>cnt[b+'|'+l]===1))};
+ if(nf===0&&nb===0)kind='t1';else if(levs2&&nb===0&&S.tt==='t')kind='t2';else if(pairOK()&&S.tt==='t')kind='tp';else kind='anova';
+ if(nf===0&&nb>0){o.innerHTML=h+'<div class="card"><b>Only block columns were chosen but no factor. Mark the treatment column as Factor.</b></div>';wireData();return}
+ if(kind==='anova'){const M=fitANOVA(D);if(M.err){o.innerHTML=h+`<div class="card"><b>${esc(M.err)}</b></div>`;wireData();return}h+=anovaCards(D,M,al)}
+ else h+=tCards(D,kind,al);
+ o.innerHTML=h;wireData();wireAl()}
+function dataCard(D){const R=S.raw,C=S.cols,N=R.data.length;
+ const prev=`<div class="tw"><table><tr>${R.hd.map(x=>`<th style="text-align:left">${esc(x)}</th>`).join('')}</tr>${R.data.slice(0,10).map(r=>`<tr>${r.map(v=>`<td style="text-align:left">${esc(v)}</td>`).join('')}</tr>`).join('')}</table></div><p class="note">First ${Math.min(10,N)} of ${N} rows.</p>`;
+ const ct=`<div class="tw"><table><tr><th style="text-align:left">Column</th><th>Type</th><th>Unique</th><th>Missing</th><th style="text-align:left">Levels / range</th><th style="text-align:left">Role (edit to re-run)</th></tr>${C.map(c=>{const nums=c.num?R.data.map(r=>+r[c.j]).filter(isFinite):[];return`<tr><td style="text-align:left"><b>${esc(c.name)}</b></td><td>${c.num?'numeric':'text'}</td><td>${c.uniq}</td><td>${c.miss}</td><td style="text-align:left">${c.uniq<=8?esc(c.levels.join(', ')):c.num?f5(Math.min(...nums))+' to '+f5(Math.max(...nums)):c.uniq+' distinct values'}</td><td style="text-align:left"><select data-role="${c.j}">${Object.keys(ROLE).map(k=>`<option value="${k}"${S.roles[c.j]===k?' selected':''}>${ROLE[k]}</option>`).join('')}</select></td></tr>`}).join('')}</table></div>`;
+ let info='';if(!D.err){const y=D.rows.map(r=>r.y),sd=y.length>1?sdv(y):NaN,nf=D.fac.length;
+  const cnt={};D.rows.forEach(r=>{const k=D.fidx.map(i=>r.f[i]).join(' / ');cnt[k]=(cnt[k]||0)+1});const cv=Object.values(cnt),ncell=D.lv.reduce((a,l)=>a*l.length,1);
+  const bal=nf===0?'':cv.length===ncell&&Math.min(...cv)===Math.max(...cv)?`balanced: ${cv[0]} observation${cv[0]>1?'s':''} per treatment combination`:'<b>unbalanced or incomplete</b> (cells have unequal counts or are empty); Type III sums of squares are used';
+  info=`<h4 style="margin:12px 0 4px">Data information</h4><div class="tw"><table><tr><th style="text-align:left">Response</th><th>n</th><th>Mean</th><th>SD</th><th>Min</th><th>Median</th><th>Max</th></tr><tr><td style="text-align:left">${esc(D.resp)}${S.tr!=='none'?' ('+S.tr+' scale)':''}</td><td>${y.length}</td><td>${f5(mean(y))}</td><td>${f5(sd)}</td><td>${f5(Math.min(...y))}</td><td>${f5(med(y))}</td><td>${f5(Math.max(...y))}</td></tr></table></div>
+  <p>${D.fac.length?'Factors: '+D.fac.map((f,i)=>`<b>${esc(f)}</b> (${D.lv[i].length} levels: ${esc(D.lv[i].slice(0,8).join(', '))}${D.lv[i].length>8?'…':''})`).join(' × ')+'. ':'No factor chosen. '}${D.bn.length?'Blocks: '+D.bn.map((b,i)=>`<b>${esc(b)}</b> (${D.bl[i].length} levels)`).join(', ')+'. ':''}${bal?'Design is '+bal+'.':''}</p>${D.notes.map(n=>`<p class="note">⚠ ${esc(n)}</p>`).join('')}<div class="g"><div id="d1"></div><div id="d2"></div></div>`}
+ return pcard(1,'Data and data information',`<p class="note">File: <b>${esc(S.file)}</b> · ${N} rows × ${C.length} columns${S.hints.length?' · hints read from your statement: '+S.hints.map(esc).join('; '):''}</p>${prev}<h4 style="margin:12px 0 4px">Columns and detected roles</h4>${ct}<p class="note">Roles were detected automatically from the column contents and your statement. Change a role to re-run the whole analysis.</p>${info}`)}
+function drawData(D){if(D.err)return;const y=D.rows.map(r=>r.y);const l1=lay('Histogram of '+D.resp,D.resp,'count');l1.height=240;draw('d1',[{x:y,type:'histogram',marker:{color:'#147d92'}}],l1);
+ const l2=lay(D.fac.length?D.resp+' by '+D.fac[0]:'Run order plot',D.fac.length?D.fac[0]:'observation',D.resp);l2.height=240;
+ if(D.fac.length)draw('d2',D.lv[0].map((l,i)=>({y:D.rows.filter(r=>r.f[D.fidx[0]]===l).map(r=>r.y),type:'box',name:l,marker:{color:COLS[i%8]},boxpoints:'all',jitter:.4,pointpos:0})),l2);else draw('d2',[{x:y.map((_,i)=>i+1),y,mode:'lines+markers',marker:{color:'#147d92'}}],l2)}
+function wireData(){document.querySelectorAll('select[data-role]').forEach(s=>s.onchange=()=>{const j=+s.dataset.role;if(s.value==='resp')S.cols.forEach(c=>{if(S.roles[c.j]==='resp')S.roles[c.j]='fac'});S.roles[j]=s.value;S.ph=null;S.term=0;go()});drawData(buildDataSafe())}
+function buildDataSafe(){try{return buildData()}catch(e){return{err:'x'}}}
+function wireAl(){const a=$('al');if(a)a.oninput=e=>{S.alpha=+e.target.value;go()};
+ const on=(id,f)=>{const e=$(id);if(e)e.onchange=ev=>{f(ev.target.value);go()}};on('tr',v=>{S.tr=v});on('mdl',v=>{S.model=v;S.ph=null});on('tt',v=>{S.tt=v});on('te',v=>{S.term=+v});on('pho',v=>{S.ph=v});on('pm',v=>{S.pm=v});
+ const m=$('mu0');if(m)m.onchange=e=>{const v=parseFloat(e.target.value);if(isFinite(v)){S.mu0=v;go()}}}
+const methodCard=(n,name,why,opts)=>pcard(n,'Method selected',`<div class="dec n" style="border-color:#147d92;background:#eef7fa"><b>${name}</b><br>${why}</div><p style="margin-top:10px">Transformation of the response: <select id="tr">${['none','log','sqrt'].map(t=>`<option${t===S.tr?' selected':''}>${t}</option>`).join('')}</select>${opts||''}</p><p class="note">Change roles in step 1, or use these controls, to retune the analysis.</p>`);
+/* ---------- t tests ---------- */
+function tCards(D,kind,al){const y=D.rows.map(r=>r.y),resp=D.resp,fi=D.fidx[0];let h='',res,fit,LM,groups=null,gnote='',T,df,lab,why,hyp,ci,tt;
+ if(kind==='t1'){const n=y.length,m=mean(y),s=sdv(y);df=n-1;tt=(m-S.mu0)/(s/Math.sqrt(n));res=y.map(v=>v-m);fit=y.map(()=>m);LM=lm(y,[y.map(()=>1)]);lab='One-sample t test';why=`One numeric response and no grouping column → one-sample t test of the mean against a hypothesized value μ₀.`;hyp=`H₀: μ = ${S.mu0}<br>H₁: μ ≠ ${S.mu0}`;
+  const se=s/Math.sqrt(n),tc=jStat.studentt.inv(1-al/2,df);ci=[m-tc*se,m+tc*se];T={stat:tt,df,p:2*(1-jStat.studentt.cdf(Math.abs(tt),df)),crit:tc,est:m-S.mu0,estl:'mean − μ₀',ci:ci,extra:`n = ${n}, mean = ${f5(m)}, SD = ${f5(s)}`};h+=methodCard(2,lab,why,` &nbsp; μ₀ = <input type="number" id="mu0" step="any" value="${S.mu0}" style="width:90px">`)}
+ else if(kind==='t2'){const g=D.lv[0].map(l=>D.rows.filter(r=>r.f[fi]===l).map(r=>r.y)),[a,b]=g,n1=a.length,n2=b.length,m1=mean(a),m2=mean(b),v1=vr(a),v2=vr(b);df=n1+n2-2;const sp=Math.sqrt(((n1-1)*v1+(n2-1)*v2)/df),se=sp*Math.sqrt(1/n1+1/n2);tt=(m1-m2)/se;
+  const tc=jStat.studentt.inv(1-al/2,df),sw_=Math.sqrt(v1/n1+v2/n2),tW=(m1-m2)/sw_,dfW=sw_**4/((v1/n1)**2/(n1-1)+(v2/n2)**2/(n2-1));
+  const cols=[y.map(()=>1),...[D.rows.map(r=>(r.f[fi]===D.lv[0][0]?1:-1))]];LM=lm(y,cols);res=y.map((v,i)=>v-LM.fit[i]);fit=LM.fit;groups=g.map((_,k)=>D.rows.map((r,i)=>r.f[fi]===D.lv[0][k]?i:-1).filter(i=>i>=0));gnote='groups = the two levels';
+  lab='Two-sample t test (pooled variance)';why=`One factor (${esc(D.fac[0])}) with two levels, no blocking → two-sample t test, equivalent to a one-way ANOVA with F = t². Welch’s version is shown too in case variances differ.`;hyp=`H₀: μ(${esc(D.lv[0][0])}) = μ(${esc(D.lv[0][1])})<br>H₁: μ(${esc(D.lv[0][0])}) ≠ μ(${esc(D.lv[0][1])})`;
+  T={stat:tt,df,p:2*(1-jStat.studentt.cdf(Math.abs(tt),df)),crit:tc,est:m1-m2,estl:'difference of means',ci:[m1-m2-tc*se,m1-m2+tc*se],extra:`n = ${n1} / ${n2}, means = ${f5(m1)} / ${f5(m2)}, SDs = ${f5(Math.sqrt(v1))} / ${f5(Math.sqrt(v2))}<br>Welch: t = ${f5(tW)}, df = ${f5(dfW)}, p = ${fp(2*(1-jStat.studentt.cdf(Math.abs(tW),dfW)))}`};h+=methodCard(2,lab,why,` &nbsp; Two-level factor: <select id="tt"><option value="t" selected>t test</option><option value="a">ANOVA</option></select>`)}
+ else{const bm={};D.rows.forEach(r=>{bm[r.b[0]]=bm[r.b[0]]||{};bm[r.b[0]][r.f[fi]]=r.y});const d=D.bl[0].map(b=>bm[b][D.lv[0][0]]-bm[b][D.lv[0][1]]),n=d.length,m=mean(d),s=sdv(d);df=n-1;tt=m/(s/Math.sqrt(n));const tc=jStat.studentt.inv(1-al/2,df),se=s/Math.sqrt(n);
+  res=d.map(v=>v-m);fit=d.map(()=>m);LM=lm(d,[d.map(()=>1)]);lab='Paired t test';why=`Two levels of ${esc(D.fac[0])} and every ${esc(D.bn[0])} appears once at each level → paired t test on the within-${esc(D.bn[0])} differences (equivalent to a randomized block ANOVA).`;hyp=`H₀: μ_d = 0 (mean of ${esc(D.lv[0][0])} − ${esc(D.lv[0][1])} is zero)<br>H₁: μ_d ≠ 0`;
+  T={stat:tt,df,p:2*(1-jStat.studentt.cdf(Math.abs(tt),df)),crit:tc,est:m,estl:'mean difference',ci:[m-tc*se,m+tc*se],extra:`${n} pairs, mean difference = ${f5(m)}, SD of differences = ${f5(s)}`};gnote='';h+=methodCard(2,lab,why,` &nbsp; Two-level factor: <select id="tt"><option value="t" selected>t test</option><option value="a">ANOVA</option></select>`)}
+ const rej=T.p<al;
+ h+=pcard(3,'Hypotheses',`<p class="m">${hyp}</p>${S.stmt?`<p class="note">Statement: ${esc(S.stmt)}</p>`:''}`)+alphaCard(4,al)
+ +pcard(5,'Test result',`<div class="g3"><div>t statistic<br><b class="m">t = ${f5(T.stat)}</b></div><div>p-value<br><b class="m">${fp(T.p)}</b></div><div>Critical value<br><b class="m">±${f5(T.crit)} (df = ${f5(T.df)})</b></div></div><p>${T.estl}: <b>${f5(T.est)}</b>, ${100*(1-al)}% CI [${f5(T.ci[0])}, ${f5(T.ci[1])}]<br><span class="note">${T.extra}</span></p><div id="p4"></div>`)
+ +pcard(6,'Decision',`<div class="dec ${rej?'':'n'}"><b>${rej?'Reject H₀':'Fail to reject H₀'}</b> at α = ${al.toFixed(2)} (p = ${fp(T.p)}). ${rej?'There is statistically significant evidence against H₀.':'There is not enough evidence against H₀; this does not prove it true.'}</div>`)
+ +checksHTML(7,res,fit,LM,groups,gnote,al,D.ordered)+`<div class="card"><h2><span>8</span>Post hoc comparisons</h2><p>Not needed: with at most two means there is a single comparison, which the test above already makes.</p></div>`;
+ setTimeout(()=>{regionPlot('p4','t',T.stat,T.crit,T.df);drawChecks(res,fit)},0);return h}
+/* ---------- ANOVA ---------- */
+function anovaCards(D,M,al){const {fac,lv,L,ix,tests,dfE,mse,rss,nf,N,bn}=M,nb=bn.length,nrep=M.balanced?M.maxc:null;
+ tests.forEach(t=>{t.crit=jStat.centralF.inv(1-al,t.df,dfE);t.rej=t.p<al});if(S.term>=tests.length)S.term=0;const T=tests[S.term],nonadd=M.nonadd;
+ const unrep=M.maxc===1,interact=M.ms.some(m=>pc(m)>1);
+ let name,why;const wn=['','one-way','two-way','three-way','four-way'][nf];
+ if(nf===1&&nb===0){name='One-way ANOVA (completely randomized)';why=`One factor (${esc(fac[0])}) with ${L[0]} levels and no blocks → one-way ANOVA.`}
+ else if(nf===1&&nb===1){name='Randomized complete block design (RCBD) ANOVA';why=`One treatment factor (${esc(fac[0])}) plus a block column (${esc(bn[0])}) → ANOVA with additive treatment and block effects.`}
+ else if(nf===1&&nb===2){name='Latin square ANOVA';why=`One treatment factor and two blocking columns (${esc(bn.join(', '))}) → Latin-square style ANOVA: treatment, row and column effects, additive.`}
+ else if(nb>0){name=`${wn[0].toUpperCase()+wn.slice(1)} factorial ANOVA in blocks`.replace(/^./,c=>c.toUpperCase());name=`${wn.charAt(0).toUpperCase()+wn.slice(1)} factorial ANOVA with blocks`;why=`${nf} factors (${esc(fac.join(', '))}) and ${nb} blocking column(s) → factorial ANOVA, blocks entered additively.`}
+ else if(unrep&&nf===2){name='Two-way ANOVA without replication (additive) + Tukey nonadditivity test';why=`Two factors with one observation per cell cannot estimate the interaction, so an additive model is fitted and Tukey’s one-df test checks for nonadditivity.`}
+ else{name=`${wn.charAt(0).toUpperCase()+wn.slice(1)} ANOVA${interact?' with interactions':' (main effects only)'}`;why=`${nf} factors (${esc(fac.map((f,i)=>f+' ('+L[i]+')').join(' × '))}) ${nrep?`with ${nrep} replicate${nrep>1?'s':''} per cell`:'with unequal cell counts'} → ${wn} ANOVA${interact?', all interactions included':''}.`}
+ const mdl=`<select id="mdl"><option value="auto"${S.model==='auto'?' selected':''}>Model: automatic</option>${nf>1?`<option value="full"${S.model==='full'?' selected':''}>Model: full (all interactions)</option><option value="add"${S.model==='add'?' selected':''}>Model: additive (main effects only)</option>`:''}</select>`;
+ const two=nf===1&&L[0]===2?` &nbsp; <select id="tt"><option value="t">Two-level factor: t test</option><option value="a" selected>Two-level factor: ANOVA</option></select>`:'';
+ let h=methodCard(2,name,why+(M.notes.length?'<br><span class="note">'+M.notes.map(esc).join(' ')+'</span>':''),' &nbsp; '+mdl+two);
+ /* hypotheses */
+ const mains=fac.map(f=>`H₀: all ${esc(f)} level means are equal<br>H₁: at least one ${esc(f)} mean differs`).join('<br>'),ints=tests.filter(t=>!t.blk&&t.ord>1).map(t=>`H₀: no ${esc(t.name)} interaction<br>H₁: some ${esc(t.name)} interaction effect is nonzero`).join('<br>');
+ h+=pcard(3,'Hypotheses',`<p class="m">${mains}${ints?'<br>'+ints:''}</p>${nb?'<p class="note">Block effects are included to remove nuisance variation; they are not a hypothesis of interest.</p>':''}${S.stmt?`<p class="note">Statement: ${esc(S.stmt)}</p>`:''}`)+alphaCard(4,al);
+ /* table */
+ const tb=[...tests.map(t=>`<tr><td style="text-align:left">${esc(t.name)}</td><td>${f5(t.ss)}</td><td>${t.df}</td><td>${f5(t.ms)}</td><td>${f5(t.F)}</td><td>${fp(t.p)}</td></tr>`),`<tr><td style="text-align:left">Error</td><td>${f5(rss)}</td><td>${dfE}</td><td>${f5(mse)}</td><td></td><td></td></tr>`,`<tr><td style="text-align:left">Total</td><td>${f5(M.sst)}</td><td>${N-1}</td><td></td><td></td><td></td></tr>`].join('');
+ h+=pcard(5,'ANOVA table and test',`<table><tr><th style="text-align:left">Source</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>P</th></tr>${tb}</table>${nonadd?`<p><b>Tukey’s one-df test for nonadditivity:</b> SS = ${f5(nonadd.ss)}, remainder SS = ${f5(nonadd.rs)} (${nonadd.rd} df), F = ${f5(nonadd.F)}, p = ${fp(nonadd.p)} ${tag(nonadd.p>=al,'no evidence of interaction','interaction detected: additive model inadequate')}</p>`:''}<p class="note">${M.balanced?'Balanced design: sums of squares are the usual orthogonal decomposition.':'Unbalanced design: Type III sums of squares (each term adjusted for all others).'}${nb?' Block rows are for information; their F does not test the treatments.':''}</p>
+ <p>Rejection region for: <select id="te">${tests.map((t,i)=>`<option value="${i}"${i===S.term?' selected':''}>${esc(t.name)}</option>`).join('')}</select></p><div class="g3"><div>F statistic<br><b class="m">F = ${f5(T.F)}</b></div><div>p-value<br><b class="m">${fp(T.p)}</b></div><div>Critical value<br><b class="m">F(${T.df}, ${dfE}) = ${f5(T.crit)}</b></div></div><div id="p4"></div>`);
+ /* decision */
+ const iSig=tests.some(t=>!t.blk&&t.ord>1&&t.rej),mSig=tests.filter(t=>!t.blk&&t.ord===1&&t.rej),naS=nonadd&&nonadd.p<al;
+ const lines=tests.filter(t=>!t.blk).map(t=>`<li>${esc(t.name)}: <b style="color:${t.rej?'#b42318':'#157347'}">${t.rej?'reject H₀':'fail to reject H₀'}</b> (F = ${f5(t.F)}, p = ${fp(t.p)})</li>`).join('');
+ const guide=iSig?'<b>An interaction is significant.</b> The effect of one factor depends on another, so interpret the factors together (simple-effect comparisons in step 8) instead of overall main-effect means.':mSig.length?`<b>${interact?'No significant interaction. ':''}</b>The significant ${mSig.length>1?'effects':'effect'} (${mSig.map(t=>esc(t.name)).join(', ')}) can be interpreted on average over the other factors; compare levels in step 8.`:'<b>No effect is significant</b> at this α. Failing to reject is not proof of equality.';
+ const bk=tests.filter(t=>t.blk).map(t=>`<br>${esc(t.name.replace(' (block)',''))} blocking: F = ${f5(t.F)}, p = ${fp(t.p)} — ${t.rej?'removed a significant amount of variation':'did not remove a significant amount of variation'}.`).join('');
+ h+=pcard(6,'Decision',`<div class="dec ${(iSig||mSig.length||naS)?'':'n'}"><ul style="margin:0 0 8px 18px;padding:0">${lines}</ul>${nonadd?`Nonadditivity (Tukey): <b>${naS?'reject H₀ (interaction present)':'fail to reject H₀ (additive)'}</b><br>`:''}${guide}${bk}</div>`);
+ /* assumptions */
+ const useCells=M.minc>=3&&!bn.length,grp=useCells?Object.values(ix.reduce((a,r,i)=>{const k=r.join('|');(a[k]=a[k]||[]).push(i);return a},{})):ix.reduce((a,r,i)=>{(a[r[0]]=a[r[0]]||[]).push(i);return a},[]).filter(Boolean);
+ h+=checksHTML(7,M.res,M.fit,M.LM,grp,useCells?'groups = treatment cells':'groups = '+esc(fac[0])+' levels',al,D.ordered);
+ /* post hoc */
+ const opts=[];fac.forEach((f,j)=>{if(L[j]>1)opts.push({v:'m:'+j,t:`${f} — marginal means`})});if(nf>1)fac.forEach((f,j)=>fac.forEach((g,m)=>{if(j!==m)opts.push({v:`s:${j}:${m}`,t:`${f} within each level of ${g}`})}));
+ let ph='';
+ if(!opts.length||dfE<1)ph='<p>Not available.</p>';else{
+  if(S.ph===null||!opts.some(o=>o.v===S.ph)){const sig=tests.filter(t=>!t.blk&&t.rej);const s1=sig.find(t=>t.ord===1&&L[Math.log2(t.m)]>2);S.ph=iSig&&opts.find(o=>o.v[0]==='s')?opts.find(o=>o.v[0]==='s').v:s1?'m:'+Math.log2(s1.m):opts[0].v}
+  const sp=S.ph.split(':'),jj=+sp[1],mm=sp[2]===undefined?-1:+sp[2],slices=mm<0?[null]:lv[mm].map((_,l)=>l),qc=jStat.tukey.inv(1-al,L[jj],dfE),tcv=jStat.studentt.inv(1-al/2,dfE);let pr='',lsm='';
+  slices.forEach(sl=>{const fix={};if(sl!==null)fix[mm]=sl;const rows=lv[jj].map((_,l)=>lsRow(M,{...fix,[jj]:l}));
+   lv[jj].forEach((l,a)=>{const m_=rows[a].reduce((s,v,i)=>s+v*M.LM.b[i],0);let q=0;rows[a].forEach((v,i)=>rows[a].forEach((w,k)=>{q+=v*M.LM.C[i][k]*w}));lsm+=`<tr>${mm>=0?`<td style="text-align:left">${esc(lv[mm][sl])}</td>`:''}<td style="text-align:left">${esc(l)}</td><td>${f5(m_)}</td><td>${f5(Math.sqrt(q*mse))}</td></tr>`});
+   for(let a=0;a<L[jj];a++)for(let b=a+1;b<L[jj];b++){const {d,se}=contrastStat(M,rows[a],rows[b]);let p,hw;if(S.pm==='tukey'){p=Math.min(1,1-jStat.tukey.cdf(Math.SQRT2*Math.abs(d)/se,L[jj],dfE));hw=qc/Math.SQRT2*se}else{p=2*(1-jStat.studentt.cdf(Math.abs(d)/se,dfE));hw=tcv*se}
+    pr+=`<tr>${mm>=0?`<td style="text-align:left">${esc(lv[mm][sl])}</td>`:''}<td style="text-align:left">${esc(lv[jj][a])} − ${esc(lv[jj][b])}</td><td>${f5(d)}</td><td>${f5(d-hw)}</td><td>${f5(d+hw)}</td><td>${fp(p)}</td><td>${p<al?'<b style="color:#b42318">significant</b>':'not significant'}</td></tr>`}});
+  const need=iSig||mSig.some(t=>L[Math.log2(t.m)]>2);
+  ph=`<p>${need?'Post hoc comparisons are recommended here.':'Post hoc is not strictly required (no significant effect with more than two levels), but the comparisons are available.'}</p><p>Comparisons: <select id="pho">${opts.map(o=>`<option value="${o.v}"${o.v===S.ph?' selected':''}>${esc(o.t)}</option>`).join('')}</select> Method: <select id="pm"><option value="tukey"${S.pm==='tukey'?' selected':''}>Tukey HSD</option><option value="lsd"${S.pm==='lsd'?' selected':''}>Fisher LSD</option></select></p>
+  <div class="tw"><table><tr>${mm>=0?`<th style="text-align:left">${esc(fac[mm])}</th>`:''}<th style="text-align:left">Comparison</th><th>Difference</th><th>Lower</th><th>Upper</th><th>p</th><th>At α</th></tr>${pr}</table></div>
+  <details><summary>Adjusted (least-squares) means</summary><div class="tw"><table><tr>${mm>=0?`<th style="text-align:left">${esc(fac[mm])}</th>`:''}<th style="text-align:left">Level</th><th>Mean</th><th>SE</th></tr>${lsm}</table></div></details>
+  <p class="note">${S.pm==='tukey'?`Tukey intervals control the family-wise error rate over the ${L[jj]} levels (${dfE} error df, Tukey–Kramer if unbalanced).`:'Fisher LSD does not control the family-wise error rate; use it only after a significant F test.'}${iSig&&mm<0?' <b>An interaction is significant, so marginal comparisons can mislead; consider the “within each level” options.</b>':''}</p>`}
+ h+=pcard(8,'Post hoc comparisons',ph);
+ setTimeout(()=>{regionPlot('p4','F',T.F,T.crit,T.df,dfE);drawChecks(M.res,M.fit);drawInter(D,M)},0);return h}
+function drawInter(D,M){/* optional interaction plot appended to data card */const el=$('d2');if(!el||M.nf<2||M.nf>3)return;const {fac,lv,ix}=M,y=M.y,oth=[...new Set(ix.map(a=>a.slice(1).join('|')))];
+ const tr=oth.map((k,ci)=>{const xs=[],ys=[];lv[0].forEach((l,li)=>{const v=y.filter((_,i)=>ix[i][0]===li&&ix[i].slice(1).join('|')===k);if(v.length){xs.push(l);ys.push(mean(v))}});return{x:xs,y:ys,mode:'lines+markers',name:k.split('|').map((v,j)=>fac[j+1]+'='+lv[j+1][v]).join(', '),line:{color:COLS[ci%8]}}});
+ const l=lay('Interaction plot: cell means (lines = '+fac.slice(1).join(' × ')+')',fac[0],'mean of '+D.resp);l.height=240;l.xaxis.type='category';l.showlegend=true;l.legend={orientation:'h',y:-.35};draw('d2',tr,l)}
+/* ---------- input panel ---------- */
+const EX=[{"t": "Battery life: material \u00d7 temperature (two-way, replicated)", "csv": "Material,Temperature,Life (hours)\n1,15,130.0\n1,15,155.0\n1,15,74.0\n1,15,180.0\n1,70,34.0\n1,70,40.0\n1,70,80.0\n1,70,75.0\n1,125,20.0\n1,125,70.0\n1,125,82.0\n1,125,58.0\n2,15,150.0\n2,15,188.0\n2,15,159.0\n2,15,126.0\n2,70,136.0\n2,70,122.0\n2,70,106.0\n2,70,115.0\n2,125,25.0\n2,125,70.0\n2,125,58.0\n2,125,45.0\n3,15,138.0\n3,15,110.0\n3,15,168.0\n3,15,160.0\n3,70,174.0\n3,70,120.0\n3,70,150.0\n3,70,139.0\n3,125,96.0\n3,125,104.0\n3,125,82.0\n3,125,60.0\n", "st": "An engineer compares three battery plate materials at three temperatures (15, 70 and 125 F). Four batteries are tested at every combination in random order. Response is Life (hours). Test material, temperature and their interaction at alpha = 0.05."}, {"t": "Battery life at 70 F (one-way, 3 materials)", "csv": "Material,Temperature,Life (hours)\n1,70,34.0\n1,70,40.0\n1,70,80.0\n1,70,75.0\n2,70,136.0\n2,70,122.0\n2,70,106.0\n2,70,115.0\n3,70,174.0\n3,70,120.0\n3,70,150.0\n3,70,139.0\n", "st": "Four batteries of each of three plate materials are tested at 70 F. Does mean battery life (Life (hours)) differ among materials? Use alpha = 0.05."}, {"t": "Chemical yield in day blocks (factorial with blocks)", "csv": "Temperature,Pressure,Day,Yield\nLow,250,1,86.3\nLow,260,1,84.0\nLow,270,1,85.8\nMedium,250,1,88.5\nMedium,260,1,87.3\nMedium,270,1,89.0\nHigh,250,1,89.1\nHigh,260,1,90.2\nHigh,270,1,91.3\nLow,250,2,86.1\nLow,260,2,85.2\nLow,270,2,87.3\nMedium,250,2,89.4\nMedium,260,2,89.9\nMedium,270,2,90.3\nHigh,250,2,91.7\nHigh,260,2,93.2\nHigh,270,2,93.7\n", "st": "A chemical yield experiment is run with two temperatures and three pressures. The whole experiment is replicated on two days, so Day is a block. Analyze Yield for temperature, pressure and their interaction accounting for the Day block."}, {"t": "Soft-drink filling (three-way)", "csv": "Carbonation,Pressure,Speed,Deviation from target fill height\n10,25,200,-3.0\n10,25,200,-1.0\n10,25,250,-1.0\n10,25,250,0.0\n10,30,200,-1.0\n10,30,200,0.0\n10,30,250,1.0\n10,30,250,1.0\n12,25,200,0.0\n12,25,200,1.0\n12,25,250,2.0\n12,25,250,1.0\n12,30,200,2.0\n12,30,200,3.0\n12,30,250,6.0\n12,30,250,5.0\n14,25,200,5.0\n14,25,200,4.0\n14,25,250,7.0\n14,25,250,6.0\n14,30,200,7.0\n14,30,200,9.0\n14,30,250,10.0\n14,30,250,11.0\n", "st": "A bottler studies carbonation (10, 12, 14 %), operating pressure (25, 30 psi) and line speed (200, 250 bpm) on the deviation from target fill height. Each combination is run twice. Test all main effects and interactions at alpha = 0.05."}];
+function initPanel(){const ex=$('ex');EX.forEach((e,i)=>ex.add(new Option(e.t,i)));
+ $('ex').onchange=()=>{const e=EX[+$('ex').value];if(!e)return;$('stmt').value=e.st;S.stmt=e.st;S.tr='none';S.model='auto';S.tt='t';S.alpha=.05;S.mu0=0;loadCSV(e.csv,e.t+'.csv');$('ex').value=''};
+ $('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{S.stmt=$('stmt').value;S.tr='none';S.model='auto';S.tt='t';S.mu0=0;S.alpha=.05;loadCSV(r.result,f.name)};r.readAsText(f)};
+ $('paste').onclick=()=>{const t=$('csvtxt').value.trim();if(t){S.stmt=$('stmt').value;S.tr='none';S.model='auto';S.tt='t';S.mu0=0;S.alpha=.05;loadCSV(t,'pasted data')}};
+ $('stmt').oninput=()=>{S.stmt=$('stmt').value};
+ $('redo').onclick=()=>{S.stmt=$('stmt').value;if(S.raw){detect();S.ph=null;S.term=0;go()}};
+ $('ch').innerHTML='';[['2','Chapter 2 · Simple comparisons'],['3','Chapter 3 · Single-factor (ANOVA)'],['4','Chapter 4 · Blocking designs'],['5','Chapter 5 · Factorial designs']].forEach(x=>$('ch').add(new Option(x[1],'chapter%20'+x[0]+'.html')));$('ch').add(new Option('Upload your own data','upload%20solver.html'));$('ch').value='upload%20solver.html';$('ch').onchange=()=>{location.href=$('ch').value};
+ go()}
+initPanel();
+
+</script>
+<script src="nav.js"></script>
+</body></html>

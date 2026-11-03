@@ -20,8 +20,12 @@ textarea{width:100%;height:110px;font-family:'IBM Plex Mono',monospace;font-size
 .dec{font-size:16px;padding:12px 14px;border-left:4px solid var(--red);background:#fdf1ef}.dec.n{border-color:var(--ok);background:#eef8f2}
 @media(max-width:900px){body{display:block}aside{width:auto;height:auto;position:static;padding:14px}aside select{margin-bottom:8px}.g,.g3{grid-template-columns:1fr}}
 @media(max-width:480px){body{font-size:14px}.card{padding:14px}input[type=range]{width:100%!important}}
-</style></head><body>
-<aside><h1>Design &amp; Analysis of Experiments<br><a href="interactive%20solver.html" style="font-weight:400;font-size:13px;color:#8fd3e0">← Interactive solver</a><br><a href="chapter%203.html" style="font-weight:400;font-size:13px;color:#8fd3e0">Chapter 3 →</a><br><a href="textbook%20solver.html" style="font-weight:400;font-size:13px;color:#8fd3e0">Textbook solver →</a><br><a href="index.html" style="font-weight:400;font-size:13px;color:#8fd3e0">← Home</a></h1>
+</style><style id="gn-css">.gn{flex:0 0 100%;width:100%;position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;background:#0b1a21;padding:8px 16px;font:14px/1.2 'IBM Plex Sans',sans-serif;border-bottom:1px solid #1d3744}
+.gn a{color:#b9d3dc;text-decoration:none;padding:6px 10px;border-radius:6px}.gn a:hover{background:#1b3641;color:#fff}.gn a.on{background:#147d92;color:#fff}.gn .home{font-weight:600;color:#fff;letter-spacing:.02em}
+.gn .grp{display:flex;flex-wrap:wrap;align-items:center;gap:2px}.gn .lab{color:#8fd3e0;font-weight:600;background:none;margin:0;display:inline}.gn .lab.on{color:#fff}
+@media(min-width:901px){body{flex-wrap:wrap}aside{top:46px!important;height:calc(100vh - 46px)!important;width:340px!important}}aside select{font-size:14px}
+@media(max-width:600px){.gn{gap:2px 8px;padding:6px 8px}.gn a{padding:6px 7px}}</style></head><body><nav class="gn"><a class="home" href="index.html">DOE · STAT-530</a><div class="grp"><a class="lab" href="interactive%20solver.html">Interactive solver</a><a class=on href="chapter%202.html">Chapter 2</a><a href="chapter%203.html">Chapter 3</a><a href="chapter%204.html">Chapter 4</a><a href="chapter%205.html">Chapter 5</a><a href="upload%20solver.html">Upload data</a></div><div class="grp"><a class="lab" href="textbook%20solver.html">Textbook solver</a><a href="textbook%20chapter%202.html">Chapter 2</a><a href="textbook%20chapter%203.html">Chapter 3</a><a href="textbook%20chapter%204.html">Chapter 4</a><a href="textbook%20chapter%205.html">Chapter 5</a></div></nav>
+<aside><h1>Design &amp; Analysis of Experiments</h1>
 <label>Chapter</label><select id="ch"></select><label>Problem</label><select id="pb"></select></aside>
 <main id="main"></main>
 <script>
@@ -124,4 +128,8 @@ function run(){const d=cur.d,g=cur.groups,names=Object.keys(g),arrs=names.map(n=
  draw('p2',[{x:th,y:sr,mode:'markers',marker:{color:'#147d92'}},{x:[th[0],th[th.length-1]],y:[th[0]*s2,th[th.length-1]*s2],mode:'lines',line:{color:'#d97706'}}],lay('Normal Q–Q plot','theoretical quantile','residual'));
  const l3=lay('Residuals vs run order','observation order','residual');l3.height=240;draw('p3',[{x:res.map((_,i)=>i+1),y:res,mode:'markers',marker:{color:'#147d92'}}],l3)}
 init();
-</script></body></html>
+(()=>{const s=document.getElementById('ch');s.innerHTML='';s.add(new Option('Chapter 2 · Simple comparisons','chapter%202.html'));s.add(new Option('Chapter 3 · Single-factor (ANOVA)','chapter%203.html'));s.add(new Option('Chapter 4 · Blocking designs','chapter%204.html'));s.add(new Option('Chapter 5 · Factorial designs','chapter%205.html'));s.add(new Option('Upload your own data','upload%20solver.html'));s.value='chapter%202.html';s.onchange=()=>{location.href=s.value}})();
+/*gn*/(()=>{const s=document.getElementById('ch');s.innerHTML='';s.add(new Option('Chapter 2 · Simple comparisons','chapter%202.html'));s.add(new Option('Chapter 3 · Single-factor (ANOVA)','chapter%203.html'));s.add(new Option('Chapter 4 · Blocking designs','chapter%204.html'));s.add(new Option('Chapter 5 · Factorial designs','chapter%205.html'));s.add(new Option('Upload your own data','upload%20solver.html'));s.value='chapter%202.html';s.onchange=()=>{location.href=s.value}})();/*gn-end*/
+</script>
+<script src="nav.js"></script>
+</body></html>
