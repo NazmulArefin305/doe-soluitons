@@ -197,7 +197,5 @@ function run(){const g=cur.groups,names=Object.keys(g),k=names.length,arrs=names
  const l3=lay('Residuals vs run order','observation order','residual');l3.height=220;draw('p3',[{x:res.map((_,i)=>i+1),y:res,mode:'markers',marker:{color:'#147d92'}}],l3);
  regionPlot('p4',T.type,T.stat,T.crit,T.d1,T.d2)}
 init();
-/*gn*/(()=>{const s=document.getElementById('ch');s.innerHTML='';s.add(new Option('Chapter 2 · Simple comparisons','chapter%202.html'));s.add(new Option('Chapter 3 · Single-factor (ANOVA)','chapter%203.html'));s.add(new Option('Chapter 4 · Blocking designs','chapter%204.html'));s.add(new Option('Chapter 5 · Factorial designs','chapter%205.html'));s.add(new Option('Upload your own data','upload%20solver.html'));s.value='chapter%203.html';s.onchange=()=>{location.href=s.value}})();/*gn-end*/
-</script>
-<script src="nav.js"></script>
-</body></html>
+/*gn*/(()=>{const s=document.getElementById('ch');s.innerHTML='';s.add(new Option('Chapter 2 · Simple comparisons','chapter%202.html'));s.add(new Option('Chapter 3 · Single-factor (ANOVA)','chapter%203.html'));s.add(new Option('Chapter 4 · Blocking designs','chapter%204.html'));s.add(new Option('Chapter 5 · Factorial designs','chapter%205.html'));s.add(new Option('Chapter 6 · 2^k factorial designs','chapter%206.html'));s.add(new Option('Upload your own data','upload%20solver.html'));s.value='chapter%203.html';s.onchange=()=>{location.href=s.value}})();/*gn-end*/
+</script><script src="nav.js"></script></body></html>

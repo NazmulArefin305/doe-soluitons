@@ -91,7 +91,7 @@ const tbid=ref=>{let m=ref.match(/^(Example|Problem) 5\.(\d+)$/);return m?(m[1]=
 let cur;
 const pcard=(n,t,b)=>`<div class="card"><h2><span>${n}</span>${t}</h2>${b}</div>`;
 function init(){const p=$('pb');Object.keys(P).forEach(id=>p.add(new Option(P[id].ref+' — '+P[id].title,id)));
- $('ch').innerHTML='';[['2','Chapter 2 · Simple comparisons'],['3','Chapter 3 · Single-factor (ANOVA)'],['4','Chapter 4 · Blocking designs'],['5','Chapter 5 · Factorial designs']].forEach(x=>$('ch').add(new Option(x[1],'chapter%20'+x[0]+'.html')));$('ch').add(new Option('Upload your own data','upload%20solver.html'));$('ch').value='chapter%205.html';$('ch').onchange=()=>{location.href=$('ch').value};
+ $('ch').innerHTML='';[['2','Chapter 2 · Simple comparisons'],['3','Chapter 3 · Single-factor (ANOVA)'],['4','Chapter 4 · Blocking designs'],['5','Chapter 5 · Factorial designs'],['6','Chapter 6 · 2^k factorial designs']].forEach(x=>$('ch').add(new Option(x[1],'chapter%20'+x[0]+'.html')));$('ch').add(new Option('Upload your own data','upload%20solver.html'));$('ch').value='chapter%205.html';$('ch').onchange=()=>{location.href=$('ch').value};
  p.onchange=()=>pick(p.value);const h=decodeURIComponent(location.hash.slice(1));pick(P[h]?h:'E5.1');addEventListener('hashchange',()=>{const g=decodeURIComponent(location.hash.slice(1));if(P[g]&&g!==cur.id)pick(g)})}
 function pick(id){const d=P[id];$('pb').value=id;try{history.replaceState(null,'','#'+id)}catch(e){}
  cur={id,d,alpha:.05,tr:'none',ph:null,resp:0,term:0,rows:d.rows?JSON.parse(JSON.stringify(d.rows)):null,src:d.src?JSON.parse(JSON.stringify(d.src)):null,pl:{D:.5,s:.1,a:3,b:3,tp:.9}};shell();run()}
@@ -226,6 +226,4 @@ function runPlan(){const al=cur.alpha,p=cur.pl,o=$('out'),a=Math.max(2,p.a|0),b=
  const ok=rows.filter(r=>r.pw!==null),l=lay('Power of the F test vs replicates per cell','replicates per cell n','power');l.height=260;l.yaxis.range=[0,1.02];draw('p4',[{x:ok.map(r=>r.n),y:ok.map(r=>r.pw),mode:'lines+markers',line:{color:'#147d92'}},{x:[1,8],y:[p.tp,p.tp],mode:'lines',line:{color:'#d97706',dash:'dash'}}],l)}
 init();
 
-</script>
-<script src="nav.js"></script>
-</body></html>
+</script><script src="nav.js"></script></body></html>

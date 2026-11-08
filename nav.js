@@ -2,8 +2,8 @@
 (function(){
 var nav=document.querySelector('nav.gn');if(!nav)return;
 var cur=decodeURIComponent((location.pathname.split('/').pop())||'index.html')||'index.html';
-var I=[['Chapter 2 · Simple comparisons','chapter 2.html'],['Chapter 3 · Single-factor (ANOVA)','chapter 3.html'],['Chapter 4 · Blocking designs','chapter 4.html'],['Chapter 5 · Factorial designs','chapter 5.html'],['Upload your own data','upload solver.html']];
-var T=[['Chapter 2 · Simple comparisons','textbook chapter 2.html'],['Chapter 3 · Single-factor (ANOVA)','textbook chapter 3.html'],['Chapter 4 · Blocking designs','textbook chapter 4.html'],['Chapter 5 · Factorial designs','textbook chapter 5.html']];
+var I=[['Chapter 2 · Simple comparisons','chapter 2.html'],['Chapter 3 · Single-factor (ANOVA)','chapter 3.html'],['Chapter 4 · Blocking designs','chapter 4.html'],['Chapter 5 · Factorial designs','chapter 5.html'],['Chapter 6 · 2^k factorial designs','chapter 6.html'],['Upload your own data','upload solver.html']];
+var T=[['Chapter 2 · Simple comparisons','textbook chapter 2.html'],['Chapter 3 · Single-factor (ANOVA)','textbook chapter 3.html'],['Chapter 4 · Blocking designs','textbook chapter 4.html'],['Chapter 5 · Factorial designs','textbook chapter 5.html'],['Chapter 6 · 2^k factorial designs','textbook chapter 6.html']];
 var u=function(f){return f.replace(/ /g,'%20')};
 function grp(label,hub,items){var on=cur===hub||items.some(function(i){return i[1]===cur});
  return '<div class="grp gnd'+(on?' gnon':'')+'"><a class="gnl" href="'+u(hub)+'">'+label+' <span class="gncar">▾</span></a><div class="gnm">'+items.map(function(i){return '<a href="'+u(i[1])+'"'+(i[1]===cur?' class="gncur"':'')+'>'+i[0]+'</a>'}).join('')+'</div></div>'}

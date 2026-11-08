@@ -62,7 +62,5 @@ const $=id=>document.getElementById(id),secs=[...document.querySelectorAll('temp
 secs.forEach(t=>sel.add(new Option(t.content.querySelector('h2').textContent,t.id)));
 function show(id){const t=$(id)||secs[0];sel.value=t.id;$('sol').replaceChildren(t.content.cloneNode(true));window.scrollTo(0,0);history.replaceState(null,'','#'+t.id)}
 sel.onchange=()=>show(sel.value);show(location.hash.slice(1));
-/*gn*/(()=>{const s=document.getElementById('ch');s.innerHTML='';s.add(new Option('Chapter 2 · Simple comparisons','textbook%20chapter%202.html'));s.add(new Option('Chapter 3 · Single-factor (ANOVA)','textbook%20chapter%203.html'));s.add(new Option('Chapter 4 · Blocking designs','textbook%20chapter%204.html'));s.add(new Option('Chapter 5 · Factorial designs','textbook%20chapter%205.html'));s.value='textbook%20chapter%203.html';s.onchange=()=>{location.href=s.value}})();/*gn-end*/
-</script>
-<script src="nav.js"></script>
-</body></html>
+/*gn*/(()=>{const s=document.getElementById('ch');s.innerHTML='';s.add(new Option('Chapter 2 · Simple comparisons','textbook%20chapter%202.html'));s.add(new Option('Chapter 3 · Single-factor (ANOVA)','textbook%20chapter%203.html'));s.add(new Option('Chapter 4 · Blocking designs','textbook%20chapter%204.html'));s.add(new Option('Chapter 5 · Factorial designs','textbook%20chapter%205.html'));s.add(new Option('Chapter 6 · 2^k factorial designs','textbook%20chapter%206.html'));s.value='textbook%20chapter%203.html';s.onchange=()=>{location.href=s.value}})();/*gn-end*/
+</script><script src="nav.js"></script></body></html>
