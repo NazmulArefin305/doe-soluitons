@@ -114,13 +114,15 @@ function analyze(){const d=cur.d,k=d.fac.length,B=buildObs();if(B.err)return{err
  const rows=B.rows,letters=d.fac.map(f=>f.c),tname=m=>letters.filter((_,j)=>m>>j&1).join('');
  const useAll=!!d.actual,F=useAll?rows:rows.filter(r=>!r.center),Ctr=rows.filter(r=>r.center),N=F.length;
  if(N<3)return{err:'Too few observations for this analysis.'};
- const nominal=!d.actual||cur.cm==='nominal',maxOrd=d.actual?1:k,all=termList(k,maxOrd),y=F.map(r=>r.y),one=y.map(()=>1);
+ const nominal=!d.actual||cur.cm==='nominal',maxOrd=d.actual||d.screen?1:k,allFull=termList(k,maxOrd),y=F.map(r=>r.y),one=y.map(()=>1);
  const col=m=>F.map(r=>{let p=1;for(let j=0;j<k;j++)if(m>>j&1)p*=r.x[j];return p});
  const key=r=>r.x.join('|'),grp={};F.forEach((r,i)=>{(grp[key(r)]=grp[key(r)]||[]).push(i)});
  const groups=Object.values(grp),nrep=Math.min(...groups.map(g=>g.length)),replicated=nrep>=2;
- let sat=lm(y,[one,...all.map(col)]);
- if(!sat){sat=lm(y,[one,...termList(k,1).map(col)])}
- const satTerms=sat&&sat.p===1+all.length?all:termList(k,1);
+ /* as R's lm(): keep each term (in R's order) only if it is estimable given the terms before it; aliased terms are dropped */
+ let sat=lm(y,[one,...allFull.map(col)]),satTerms=allFull;
+ if(!sat){satTerms=[];allFull.forEach(m=>{if(lm(y,[one,...satTerms.map(col),col(m)]))satTerms.push(m)});sat=lm(y,[one,...satTerms.map(col)])}
+ if(!sat)return{err:'The model cannot be fitted (singular design).'};
+ const all=satTerms,aliased=allFull.filter(m=>!satTerms.includes(m));
  const lost=B.imp?1:0,satdf=N-sat.p-lost;
  const E=satTerms.map((m,i)=>{const c=col(m),R0=lm(y,[one,...satTerms.filter(x=>x!==m).map(col)]),ss=R0?R0.rss-sat.rss:NaN,coef=sat.b[1+i],o={m,name:tname(m),ord:pc(m),coef,eff:2*coef,ss};
   if(satdf>0){const mseS=sat.rss/satdf,se=Math.sqrt(mseS*sat.C[1+i][1+i]);o.se=2*se;o.t=coef/se;o.p=2*(1-jStat.studentt.cdf(Math.abs(o.t),satdf))}return o});
@@ -130,6 +132,7 @@ function analyze(){const d=cur.d,k=d.fac.length,B=buildObs();if(B.err)return{err
   if(pse>0){len={pse,s0,df:dl,me:jStat.studentt.inv(1-al/2,dl)*pse,sme:jStat.studentt.inv(1-(1+Math.pow(1-al,1/m))/2,dl)*pse};E.forEach(e=>e.tl=e.eff/pse)}}
  /* default selection */
  const dflt=()=>{if(replicated&&satdf>0)return E.map(e=>e.name);
+  if(d.screen&&satdf>0)return E.filter(e=>e.p<cur.alpha).map(e=>e.name);
   let base=d.model?E.filter(e=>d.model.includes(e.name)).map(e=>e.name):d.defOrder?E.filter(e=>e.ord<=d.defOrder).map(e=>e.name):len?E.filter(e=>Math.abs(e.eff)>len.me).map(e=>e.name):[];
   if(!base.length)return base;const fs=[...new Set(base.join('').split(''))],mm=fs.length,cr=1<<mm;
   if(N-cr>=3||(d.actual))return E.filter(e=>e.name.split('').every(c=>fs.includes(c))).map(e=>e.name);
@@ -150,7 +153,7 @@ function analyze(){const d=cur.d,k=d.fac.length,B=buildObs();if(B.err)return{err
  const res=ym.map((v,i)=>v-LM.fit[i]),sstm=ym.reduce((s,v)=>s+(v-mean(ym))**2,0);
  /* PRESS */
  let press=NaN;try{const X=cols,n=ym.length;let s=0;for(let i=0;i<n;i++){let h=0;for(let a=0;a<p;a++)for(let b=0;b<p;b++)h+=X[a][i]*LM.C[a][b]*X[b][i];s+=(res[i]/(1-h))**2}press=s}catch(e){}
- return{d,k,rows,F:Fm,Ctr,y:ym,N:Fm.length,nominal,all,E,len,sat,satdf,replicated,nrep,sstm,sst,selNames,selE,terms,LM,p,dfE,mse,curv,lof,res,fit:LM.fit,press,r2:sstm>0?1-LM.rss/sstm:NaN,adj:dfE>0&&sstm>0?1-(LM.rss/dfE)/(sstm/(Fm.length-1-lostFit)):NaN,notes:B.notes,imp:B.imp,useCurv,col,cols,lost:lostFit,letters,groups,tname,dflt:dflt()}}
+ return{d,k,rows,F:Fm,Ctr,y:ym,N:Fm.length,nominal,all,aliased,E,len,sat,satdf,replicated,nrep,sstm,sst,selNames,selE,terms,LM,p,dfE,mse,curv,lof,res,fit:LM.fit,press,r2:sstm>0?1-LM.rss/sstm:NaN,adj:dfE>0&&sstm>0?1-(LM.rss/dfE)/(sstm/(Fm.length-1-lostFit)):NaN,notes:B.notes,imp:B.imp,useCurv,col,cols,lost:lostFit,letters,groups,tname,dflt:dflt()}}
 
 const lvl=(f,s)=>s<0?(/coded/.test(f.lo)?'−1':f.lo):(/coded/.test(f.hi)?'+1':f.hi);
 
@@ -222,12 +225,14 @@ function qrEffects(A){const k=A.k,cols=[A.F.map(()=>1),...A.all.map(m=>A.F.map(r
  return y.slice(0,X.length)}
 const rname=(A,m,dummy)=>A.letters.filter((_,j)=>m>>j&1).map(l=>l+(dummy?'1':'')).join(':');
 /* standardized residuals as rstandard() */
-function rstd(A){const LM=A.LM,X=A.cols,n=A.res.length,p=A.p,s=Math.sqrt(A.mse);return A.res.map((e,i)=>{let h=0;for(let a=0;a<p;a++)for(let b=0;b<p;b++)h+=X[a][i]*LM.C[a][b]*X[b][i];return e/(s*Math.sqrt(Math.max(1-h,1e-12)))})}
+function rstd(A){const LM=A.LM,X=A.cols,n=A.res.length,p=A.p,s=Math.sqrt(A.mse);return A.res.map((e,i)=>{let h=0;for(let a=0;a<p;a++)for(let b=0;b<p;b++)h+=X[a][i]*LM.C[a][b]*X[b][i];return 1-h<1e-8?NaN:e/(s*Math.sqrt(1-h))})}/* NaN at leverage 1, as R's rstandard() */
 function profChecks(n,A,al){const rs=rstd(A),N=rs.length;if(!(A.dfE>0))return pcard(n,'Testing assumptions — residual analysis','<p><b>The model uses all the degrees of freedom, so residual checks are not meaningful.</b> Remove terms from the model above.</p>');
- const Sw=sw(rs),ad=adTest(rs),ks=ksTest(rs),li=lillieTest(rs),D=N<=600?dwM(A.res,A.LM):null;
+ const nLev=rs.filter(v=>!isFinite(v)).length;if(N-nLev<3)return pcard(n,'Testing assumptions — residual analysis',`<p><b>${nLev} of the ${N} runs have leverage 1 in this model</b> (only ${A.dfE} residual degree${A.dfE>1?'s':''} of freedom), so their standardized residuals are undefined: R's <code>rstandard()</code> returns <code>NaN</code> for them, leaving too few values for <code>shapiro.test</code>. Residual checks are not meaningful here. Remove terms from the model above to free up degrees of freedom.</p>`);
+ const levNote=nLev?`<p class="note">${nLev} run${nLev>1?'s have':' has'} leverage 1, so ${nLev>1?'their standardized residuals are':'its standardized residual is'} undefined (<code>NaN</code> in R) and left out of the plots and tests, as R's tests drop missing values.</p>`:'';
+ const rf=rs.filter(isFinite),Sw=sw(rf),ad=adTest(rf),ks=ksTest(rf),li=lillieTest(rf),D=N<=600?dwM(A.res,A.LM):null;
  const e2=A.res.map(v=>v*v),cols=A.cols.slice(0),R=lm(e2,cols);let LMb=null,pb=null,dfb=cols.length-1;if(R&&dfb>0){const m=mean(e2),tot=e2.reduce((s,v)=>s+(v-m)**2,0);if(tot>0){LMb=N*(1-R.rss/tot);pb=1-jStat.chisquare.cdf(LMb,dfb)}}
  const row=(a,t,s,p)=>`<tr><td style="text-align:left">${a}</td><td style="text-align:left">${t}</td><td>${s}</td><td>${p===null?'—':fp(p)}</td><td>${p===null?'n/a':`<span class="tag ${p>=al?'ok':'bad'}">${p>=al?'not rejected':'rejected'}</span>`}</td></tr>`;
- return pcard(n,'Testing assumptions — residual analysis',`<h4 style="margin:4px 0">Informal checks (plots)</h4><div class="g"><div id="p1"></div><div id="p2"></div></div><div class="g"><div id="p2b"></div><div id="p3"></div></div>
+ return pcard(n,'Testing assumptions — residual analysis',`${levNote}<h4 style="margin:4px 0">Informal checks (plots)</h4><div class="g"><div id="p1"></div><div id="p2"></div></div><div class="g"><div id="p2b"></div><div id="p3"></div></div>
  <h4 style="margin:10px 0 4px">Formal tests</h4><table><tr><th style="text-align:left">Assumption</th><th style="text-align:left">Test (R function)</th><th>Statistic</th><th>p-value</th><th>Conclusion at α</th></tr>
  ${row('Equal variances','Breusch–Pagan, <code>bptest</code> (both forms)',LMb!==null?'BP = '+LMb.toFixed(3)+', df = '+dfb:'—',pb)}
  ${row('Normality','Shapiro–Wilk, <code>shapiro.test</code>',Sw?'W = '+Sw.W.toFixed(4):'—',Sw?Sw.p:null)}
@@ -236,7 +241,7 @@ function profChecks(n,A,al){const rs=rstd(A),N=rs.length;if(!(A.dfE>0))return pc
  ${row('Normality','Lilliefors, <code>lillie.test</code>','D = '+li.D.toFixed(4),li.p)}
  ${row('Independence','Durbin–Watson, <code>durbinWatsonTest</code>',D?'d = '+D.d.toFixed(3):'—',D?D.p:null)}</table>
  <p class="note">Tests use the standardized residuals, <code>rstandard</code>. The Kolmogorov–Smirnov p-value uses the asymptotic distribution. The Durbin–Watson test follows the run order ${A.d.order?'(the “actual order” column)':'(standard order, since no actual order is given)'}.</p>`)}
-function drawProfChecks(A){const rs=rstd(A),fit=A.fit,N=rs.length,sorted=[...rs].sort((a,b)=>a-b),th=ppoints(N).map(qnormJ),s2=sdv(rs),m2=mean(rs);
+function drawProfChecks(A){const rs=rstd(A),fit=A.fit,rf=rs.filter(isFinite),N=rf.length,sorted=[...rf].sort((a,b)=>a-b),th=ppoints(N).map(qnormJ),s2=sdv(rf),m2=mean(rf);
  const l1=lay('Residuals vs fitted','fitted value','standardized residual');l1.yaxis.range=[-4,4];l1.shapes=[-3,0,3].map(y=>({type:'line',xref:'paper',x0:0,x1:1,y0:y,y1:y,line:{color:'#b42318',width:1}}));
  draw('p1',[{x:fit,y:rs,mode:'markers',marker:{color:'#147d92'}}],l1);
  draw('p2',[{x:th,y:sorted,mode:'markers',marker:{color:'#147d92'}},{x:[th[0],th[N-1]],y:[m2+s2*th[0],m2+s2*th[N-1]],mode:'lines',line:{color:'#2563eb',width:2}}],lay('Normal Q–Q plot (qqnorm, qqline)','theoretical quantiles','sample quantiles'));
@@ -258,8 +263,18 @@ function profCards(A,al,k,fac,startN){let n=startN,h='';const tn=A.tname,rep=A.r
  }else{
   /* unreplicated: script A */
   const eff=qrEffects(A),names=['(Intercept)',...A.all.map(m=>rname(A,m,true))];
-  const anRows=A.E.map(e=>({name:e.name,ss:e.ss}));
-  h+=pcard(n++,'Full model — <code>lm(y ~ '+A.letters.join('*')+')</code>, <code>anova</code>',`<p class="note">An unreplicated 2<sup>${k}</sup> design has as many parameters as observations, so the full model fits perfectly: it has no residual degrees of freedom and no standard errors or p-values (R shows no value for them).</p>`+aovRows(anRows,0,0,NaN));
+  let anRows=A.E.map(e=>({name:e.name,ss:e.ss}));
+  const showRes=(A.aliased.length||A.d.screen)&&A.satdf>0;
+  if(showRes){/* sequential (Type I) sums of squares, as R's anova() */
+   const one=A.y.map(()=>1),cl=m=>A.F.map(r=>{let p=1;for(let j=0;j<k;j++)if(m>>j&1)p*=r.x[j];return p});
+   let prev=A.y.reduce((s,v)=>s+(v-mean(A.y))**2,0);anRows=A.all.map((m,i)=>{const R=lm(A.y,[one,...A.all.slice(0,i+1).map(cl)]),ss=prev-R.rss;prev=R.rss;return{name:A.tname(m),ss}})}
+  const fullF=A.d.screen?A.letters.join(' + '):A.letters.join('*');
+  const fullNote=A.d.screen
+   ?`<p class="note">This is a two-level <b>screening design</b>: ${A.N} runs for ${k} factors, so not every one of the ${1<<k} treatment combinations is run (as in a Plackett–Burman or resolution III fractional design). The interactions are aliased with the main effects or with each other, so they cannot be estimated separately and the full model is the main-effects model <code>lm(y ~ ${fullF})</code>${A.satdf>0?`, which leaves ${A.satdf} residual degree${A.satdf>1?'s':''} of freedom for the F tests`:''}. A significant main effect may partly reflect an aliased interaction; confirm the active factors in a follow-up experiment.</p>`
+   :A.aliased.length
+   ?`<p class="note">These ${A.N} runs are not a complete 2<sup>${k}</sup> design (that needs ${1<<k} distinct runs), so not every term of the full model can be estimated. As in R, each term that is aliased with terms fitted before it is dropped (R reports it as <code>NA</code>): ${A.aliased.map(m=>A.tname(m)).join(', ')}. ${A.satdf>0?`That leaves ${A.satdf} residual degree${A.satdf>1?'s':''} of freedom, so F tests are shown, but they rest on very little error information.`:'No residual degrees of freedom remain.'}</p>`
+   :`<p class="note">An unreplicated 2<sup>${k}</sup> design has as many parameters as observations, so the full model fits perfectly: it has no residual degrees of freedom and no standard errors or p-values (R shows no value for them).</p>`;
+  h+=pcard(n++,'Full model — <code>lm(y ~ '+fullF+')</code>, <code>anova</code>',fullNote+(showRes?aovRows(anRows,A.sat.rss,A.satdf,A.sat.rss/A.satdf):aovRows(anRows,0,0,NaN)));
   const absn=A.all.map((m,i)=>({name:rname(A,m,true),v:Math.abs(eff[1+i])})).sort((a,b)=>a.v-b.v);
   const effTxt=names.map((nm,i)=>`<tr><td style="text-align:left">${nm}</td><td>${f5(eff[i])}</td></tr>`).join('');
   h+=pcard(n++,'Effects — <code>fit$effects</code> and the normal plot of |effects|',`<details><summary>Values of <code>fit$effects</code></summary><div class="tw"><table><tr><th style="text-align:left">Term</th><th>effect</th></tr>${effTxt}</table></div></details><div id="np"></div><p class="note">The plot is <code>qqnorm(abs(fit$effects[-1]), type = "n")</code> with the term names as labels: the terms that lie away from the line of small effects are the active ones. Tick the terms to keep in the reduced model; the pre-ticked terms are the ones that stand out on this plot.</p>
@@ -272,7 +287,7 @@ function profCards(A,al,k,fac,startN){let n=startN,h='';const tn=A.tname,rep=A.r
   const coefRows=nmz.map((nm,i)=>{const se=Math.sqrt(mse*R.C[i][i]),t=R.b[i]/se,p=2*(1-jStat.studentt.cdf(Math.abs(t),dfe));return`<tr><td style="text-align:left">${nm}</td><td>${f5(R.b[i])}</td><td>${f5(se)}</td><td>${f5(t)}</td><td>${fp(p)}</td><td>${sigS(p)}</td></tr>`}).join('');
   const sst=Y.reduce((s,v)=>s+(v-mean(Y))**2,0),r2=1-R.rss/sst;
   let prev=[one],seqRows='';sel.forEach(e=>{const R0=lm(Y,prev),c=dm(e.m),R1=lm(Y,[...prev,c]),ss=R0.rss-R1.rss;prev=[...prev,c];const F=ss/mse;seqRows+=`<tr><td style="text-align:left">${rname(A,e.m,false)}</td><td>1</td><td>${f5(ss)}</td><td>${f5(ss)}</td><td>${f5(F)}</td><td>${fp(fpv(F,1,dfe))}</td><td>${sigS(fpv(F,1,dfe))}</td></tr>`});
-  h+=pcard(n++,'Reduced model — <code>lm</code>, <code>anova</code> and <code>aov</code>',`<p class="m" style="font-size:13px">y ~ ${sel.map(e=>rname(A,e.m,false)).join(' + ')}</p><h4 style="margin:6px 0">summary(fit1)</h4><div class="tw"><table><tr><th style="text-align:left"></th><th>Estimate</th><th>Std. Error</th><th>t value</th><th>Pr(>|t|)</th><th></th></tr>${coefRows}</table></div><p class="note">Residual standard error: ${f5(Math.sqrt(mse))} on ${dfe} degrees of freedom; multiple R² = ${f5(r2)}, adjusted R² = ${f5(1-(1-r2)*(Y.length-1)/dfe)}${A.lost?' (1 df deducted for the estimated run)':''}. The coefficients use R’s treatment coding (0/1), as in <code>lm</code> with character factors.</p>
+  h+=pcard(n++,'Reduced model — <code>lm</code>, <code>anova</code> and <code>aov</code>',`<p class="m" style="font-size:13px">y ~ ${sel.length?sel.map(e=>rname(A,e.m,false)).join(' + '):'1'}${sel.length?'':' <span class="note">(no term was selected: tick terms on the plot above to build a model)</span>'}</p><h4 style="margin:6px 0">summary(fit1)</h4><div class="tw"><table><tr><th style="text-align:left"></th><th>Estimate</th><th>Std. Error</th><th>t value</th><th>Pr(>|t|)</th><th></th></tr>${coefRows}</table></div><p class="note">Residual standard error: ${f5(Math.sqrt(mse))} on ${dfe} degrees of freedom; multiple R² = ${f5(r2)}, adjusted R² = ${f5(1-(1-r2)*(Y.length-1)/dfe)}${A.lost?' (1 df deducted for the estimated run)':''}. The coefficients use R’s treatment coding (0/1), as in <code>lm</code> with character factors.</p>
    <h4 style="margin:10px 0 4px">anova(fit1) and summary(aov)</h4><div class="tw"><table><tr><th style="text-align:left"></th><th>Df</th><th>Sum Sq</th><th>Mean Sq</th><th>F value</th><th>Pr(>F)</th><th></th></tr>${seqRows}<tr><td style="text-align:left">Residuals</td><td>${dfe}</td><td>${f5(R.rss)}</td><td>${f5(mse)}</td><td></td><td></td><td></td></tr></table></div>`);
   A.redDf=dfe;A.redMse=mse;
   h+=pcard(n++,'Post-hoc analysis — <code>PostHocTest(method = "lsd")</code>',`<p class="note">Fisher LSD comparisons for each term of the reduced model (MSE = ${f5(mse)}, ${dfe} df, ${(100*(1-al)).toFixed(0)}% confidence).</p>`+postHocHTML(A,sel.map(e=>e.m),'lsd',mse,dfe,al));
@@ -283,18 +298,18 @@ function profCards(A,al,k,fac,startN){let n=startN,h='';const tn=A.tname,rep=A.r
 function drawProfEff(A){if(!$('np')||(A.replicated&&A.satdf>0))return;const eff=qrEffects(A),arr=A.all.map((m,i)=>({n:rname(A,m,true),v:Math.abs(eff[1+i])})).sort((a,b)=>a.v-b.v),th=ppoints(arr.length).map(qnormJ),sel=new Set(A.selE.map(e=>rname(A,e.m,true))),l=lay('Normal Q–Q plot of |effects|','theoretical quantiles','|effect|');l.height=320;
  draw('np',[{x:th,y:arr.map(a=>a.v),mode:'markers+text',text:arr.map(a=>a.n),textposition:'top center',marker:{color:arr.map(a=>sel.has(a.n)?'#b42318':'#147d92'),size:7}}],l)}
 
-function setup(D,al){/* D from the upload page: rows (y transformed), fac names, lv levels (low first), fidx */
+function setup(D,al,screen){/* D from the upload page: rows (y transformed), fac names, lv levels (low first), fidx */
  const k=D.fac.length,low=D.lv.map(l=>l[0]),hi=D.lv.map(l=>l[1]);
  const d={kind:'data',fac:D.fac.map((f,i)=>({c:String.fromCharCode(65+i),name:f,lo:String(D.lv[i][0]),hi:String(D.lv[i][1])})),resp:[D.resp],
-  runs:D.rows.map(r=>({codes:D.fidx.map((fi,i)=>String(r.f[fi])===String(D.lv[i][0])?-1:1),ys:[[r.y]]})),center:null,order:null};
+  runs:D.rows.map(r=>({codes:D.fidx.map((fi,i)=>String(r.f[fi])===String(D.lv[i][0])?-1:1),ys:[[r.y]]})),center:null,order:null,screen:!!screen};
  cur={id:'upload',d,alpha:al,tr:'none',resp:0,sum:'obs',curv:false,miss:'drop',sel:K2state.sel,term:0,cm:'nominal'};return d}
 const K2state={sel:null};
 function cells(D){const k=D.fac.length,seen=new Set(D.rows.map(r=>D.fidx.map((fi,i)=>String(r.f[fi])===String(D.lv[i][0])?-1:1).join('|')));return seen.size===(1<<k)}
-function cardsFor(D,al,startN){const d=setup(D,al);const A=analyze();if(A.err)return{h:pcard(startN,'Two-level factorial analysis','<p><b>'+esc(A.err)+'</b></p>'),A:null};cur.S=A;
- const k=A.k;let h=pcard(startN,'Factor-wise plots',`<p class="note">${d.fac.map(f=>f.c+' = '+esc(f.name)+' ['+esc(f.lo)+' → −1, '+esc(f.hi)+' → +1]').join('; ')}. ${A.replicated?'Replicated design: the analysis follows the 2<sup>3</sup> plasma script.':'Unreplicated design: the analysis follows the 2<sup>4</sup> filtration script.'}</p><h4 style="margin:10px 0 4px">Box plots of the response (one for each pair of factors)</h4><div class="g">${pairs(k).map(([a,b])=>`<div id="kbx${a}_${b}"></div>`).join('')}</div><h4 style="margin:10px 0 4px">Interaction plots (one for each pair of factors)</h4><div class="g">${pairs(k).map(([a,b])=>`<div id="kip${a}_${b}"></div>`).join('')}</div>`);
+function cardsFor(D,al,startN,screen){const d=setup(D,al,screen);const A=analyze();if(A.err)return{h:pcard(startN,'Two-level factorial analysis','<p><b>'+esc(A.err)+'</b></p>'),A:null};cur.S=A;
+ const k=A.k;let h=pcard(startN,'Factor-wise plots',`<p class="note">${d.fac.map(f=>f.c+' = '+esc(f.name)+' ['+esc(f.lo)+' → −1, '+esc(f.hi)+' → +1]').join('; ')}. ${d.screen?`Screening design (${A.N} runs, ${k} two-level factors, not every combination run): main effects only, analysed with the unreplicated 2<sup>k</sup> script.`:A.replicated?'Replicated design: the analysis follows the 2<sup>3</sup> plasma script.':'Unreplicated design: the analysis follows the 2<sup>4</sup> filtration script.'}</p><h4 style="margin:10px 0 4px">Box plots of the response (one for each pair of factors)</h4><div class="g">${pairs(k).map(([a,b])=>`<div id="kbx${a}_${b}"></div>`).join('')}</div><h4 style="margin:10px 0 4px">Interaction plots (one for each pair of factors)</h4><div class="g">${pairs(k).map(([a,b])=>`<div id="kip${a}_${b}"></div>`).join('')}</div>`);
  const PC=profCards(A,al,k,d.fac,startN+1);h+=PC.h;return{h,A}}
 function wire(rerun){document.querySelectorAll('input[data-term]').forEach(c=>c.onchange=()=>{const s=new Set(cur.S?cur.S.selNames:[]);c.checked?s.add(c.dataset.term):s.delete(c.dataset.term);K2state.sel=[...s];rerun()});const rs=document.getElementById('rsel');if(rs)rs.onclick=()=>{K2state.sel=null;rerun()}}
-function drawAll(A){if(!A)return;plotFactorWise(A);if(A.dfE>0)drawProfChecks(A);drawProfEff(A)}
+function drawAll(A){if(!A)return;plotFactorWise(A);if(A.dfE>0&&rstd(A).filter(isFinite).length>=3)drawProfChecks(A);drawProfEff(A)}
 return{cells,cardsFor,wire,drawAll,reset:()=>{K2state.sel=null}}})();
 
 const pc=m=>{let c=0;while(m){c+=m&1;m>>=1}return c};
@@ -412,9 +427,12 @@ function go(){const o=$('main');if(!S.raw){o.innerHTML=`<div class="card"><h2>Up
  if(nf===0&&nb===0)kind='t1';else if(levs2&&nb===0&&S.tt==='t')kind='t2';else if(pairOK()&&S.tt==='t')kind='tp';else kind='anova';
  if(nf===0&&nb>0){o.innerHTML=h+'<div class="card"><b>Only block columns were chosen but no factor. Mark the treatment column as Factor.</b></div>';wireData();return}
  const k2ok=nb===0&&nf>=2&&nf<=5&&D.lv.every(l=>l.length===2)&&K2.cells(D);if(kind==='anova'&&k2ok&&S.k2!=='anova')kind='k2';
- const k2sel=k2ok?`<div class="card"><h2><span>⇄</span>Method for two-level factorials</h2><p>All ${nf} factors have two levels and every treatment combination is present. Method: <select id="k2m"><option value="k2"${kind==='k2'?' selected':''}>Two-level factorial 2<sup>k</sup> — professor’s R scripts (Chapter 6)</option><option value="anova"${kind!=='k2'?' selected':''}>General factorial ANOVA (Chapter 5 method)</option></select></p></div>`:'';
+ /* two-level screening design (Plackett–Burman or resolution III fraction): not every combination run, at least 2 error df for the main-effects model */
+ const scrOK=nb===0&&nf>=2&&nf<=15&&D.lv.every(l=>l.length===2)&&!K2.cells(D)&&D.rows.length>=nf+3;if(kind==='anova'&&scrOK&&(nf>4||S.k2!=='anova'))kind='k2s';
+ const k2sel=scrOK&&nf<=4?`<div class="card"><h2><span>⇄</span>Method for two-level factorials</h2><p>All ${nf} factors have two levels but not every treatment combination is present (${D.rows.length} of ${1<<nf} runs). Method: <select id="k2m"><option value="k2"${kind==='k2s'?' selected':''}>Two-level screening design — main-effects model (Chapter 6 scripts)</option><option value="anova"${kind!=='k2s'?' selected':''}>General factorial ANOVA (Chapter 5 method)</option></select></p></div>`:k2ok?`<div class="card"><h2><span>⇄</span>Method for two-level factorials</h2><p>All ${nf} factors have two levels and every treatment combination is present. Method: <select id="k2m"><option value="k2"${kind==='k2'?' selected':''}>Two-level factorial 2<sup>k</sup> — professor’s R scripts (Chapter 6)</option><option value="anova"${kind!=='k2'?' selected':''}>General factorial ANOVA (Chapter 5 method)</option></select></p></div>`:'';
  let K2R=null;
  if(kind==='k2'){K2R=K2.cardsFor(D,al,3);h+=k2sel+alphaCard(2,al)+K2R.h}
+ else if(kind==='k2s'){K2R=K2.cardsFor(D,al,3,true);h+=k2sel+alphaCard(2,al)+K2R.h}
  else if(kind==='anova'){h+=k2sel;const M=fitANOVA(D);if(M.err){o.innerHTML=h+`<div class="card"><b>${esc(M.err)}</b></div>`;wireData();return}h+=anovaCards(D,M,al)}
  else h+=tCards(D,kind,al);
  o.innerHTML=h;wireData();wireAl();if(K2R){K2.wire(go);setTimeout(()=>K2.drawAll(K2R.A),0)}}
